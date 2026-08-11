@@ -118,26 +118,3 @@ zhangxuefeng-demo/
 | zhang_strategy_2026.json | 7 | 2026 备考理念 |
 | gaokao_2026.json | 31 | 31 省 2026 分数线 |
 
-## 演示问题参考
-
-1. **"老师今年湖北一本线？"** — 应答：物理 435 / 历史 443，纠正"582"等错误数据
-2. **"650 分读湖北 AI 怎么报？"** — 应答：武大 654 / 华科 658 / 武汉理工 646 / 湖工大 583-586
-3. **"文科 550 能上 211 吗？"** — 答：建议双非一本/二本好专业优先
-4. **"医学专业怎么样？"** — 答：周期长、家里有资源才考虑
-
-## 常见问题
-
-**Q：跑起来后，AI 回答很慢/很傻？**
-A：默认模型是 Qwen 72B（便宜中文强）。要更聪明，编辑 `.env` 把 `TIER_MODEL_MEDIUM` 和 `TIER_MODEL_HIGH` 改成 `anthropic/claude-3.5-sonnet`（需要 OpenRouter 余额）。
-
-**Q：怎么换 Claude 4 / GPT-4o？**
-A：编辑 `.env` 的 `TIER_MODEL_*`，例如 `TIER_MODEL_HIGH=anthropic/claude-3-opus`。改完重启。
-
-**Q：朗读按钮没反应？**
-A：TTS 需要在 `.env` 配置 `MINIMAX_API_KEY`（https://platform.MiniMax.io 申请）。没配会弹提示框。
-
-**Q：RAG 召回不准？**
-A：当前用本地 TF-IDF（零依赖但语义弱）。在 `.env` 配 `OPENAI_API_KEY` 后重启 → 自动切到 OpenAI Embedding。新增/编辑资料会自动重索引。
-
-**Q：发消息报 401 "User not found" 怎么办？**
-A：key 格式对但 OpenRouter 找不到这个 key 对应的账号。**最简办法**：点左下角 **系统诊断** 按钮，按里面的步骤走（主要是去 https://openrouter.ai/keys 查 key 状态，确认账号邮箱已验证）。
