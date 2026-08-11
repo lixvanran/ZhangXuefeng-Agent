@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "ZhangXueFeng Agent"
-    APP_VERSION: str = "0.8.0"
+    APP_VERSION: str = "0.9.1"
     DEBUG: bool = True
 
     # Server
