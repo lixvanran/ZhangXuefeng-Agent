@@ -1,0 +1,24 @@
+# ===== 核心 =====
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+openai>=1.12.0
+sqlalchemy>=2.0.27
+pydantic>=2.6.1
+pydantic-settings>=2.2.1
+python-multipart>=0.0.9
+aiofiles>=23.2.1
+python-dotenv>=1.0.1
+httpx>=0.27.0
+sse-starlette>=2.0.0
+
+# ===== Embedding（可选，开了 OPENAI_API_KEY 才会用上 OpenAI）=====
+# sentence-transformers 没用上, 列了也不装, 删了
+# chromadb 没用上, 删了
+
+# ===== 联网搜索 =====
+duckduckgo-search>=6.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# ===== Tavily 搜索（可选, 需要时自己加）=====
+# tavily-python>=0.3.0

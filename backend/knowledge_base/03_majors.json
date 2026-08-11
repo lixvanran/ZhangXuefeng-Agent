@@ -1,0 +1,2318 @@
+[
+  {
+    "id": "MAJ-001",
+    "name": "计算机科学与技术",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": "93.9%",
+    "median_salary": "7500",
+    "grad_school_ratio": "35%",
+    "job_match_rate": "85%",
+    "recommended_cities": "北京/深圳/杭州/上海",
+    "comment": "普通家庭孩子逆袭黄金赛道，但已经卷成麻花。985硕士进大厂年薪30万+，双非出来可能在做外包。",
+    "tags": [
+      "工学",
+      "计算机类",
+      "计算机科学与技术",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-002",
+    "name": "软件工程",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": "94.5%",
+    "median_salary": "8000",
+    "grad_school_ratio": "25%",
+    "job_match_rate": "88%",
+    "recommended_cities": "深圳/杭州/北京/成都",
+    "comment": "比计算机更偏工程实践，上手快。但35岁危机同样存在。",
+    "tags": [
+      "工学",
+      "计算机类",
+      "软件工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-003",
+    "name": "人工智能",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": "91.2%",
+    "median_salary": "10000",
+    "grad_school_ratio": "60%",
+    "job_match_rate": "70%",
+    "recommended_cities": "北京/深圳/杭州",
+    "comment": "新专业，门槛高。本科出来做不了核心岗位，必须读研。算法岗内卷严重。",
+    "tags": [
+      "工学",
+      "计算机类",
+      "人工智能",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-004",
+    "name": "数据科学与大数据",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": "90.5%",
+    "median_salary": "8500",
+    "grad_school_ratio": "40%",
+    "job_match_rate": "72%",
+    "recommended_cities": "北京/上海/深圳/杭州",
+    "comment": "数据分析岗需求大，但天花板不高。想做算法得读研。",
+    "tags": [
+      "工学",
+      "计算机类",
+      "数据科学与大数据",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-005",
+    "name": "信息安全",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": "92.3%",
+    "median_salary": "8000",
+    "grad_school_ratio": "35%",
+    "job_match_rate": "80%",
+    "recommended_cities": "北京/成都/西安/深圳",
+    "comment": "冷门但靠谱。网络安全人才缺口大，考公也好考。",
+    "tags": [
+      "工学",
+      "计算机类",
+      "信息安全",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-006",
+    "name": "电气工程及其自动化",
+    "category_zh": "工学",
+    "sub_category": "电气类",
+    "employment_rate": "92.1%",
+    "median_salary": "6500",
+    "grad_school_ratio": "30%",
+    "job_match_rate": "78%",
+    "recommended_cities": "各省省会",
+    "comment": "进国网的敲门砖。稳定但涨幅有限。想高薪得去新能源/芯片方向。",
+    "tags": [
+      "工学",
+      "电气类",
+      "电气工程及其自动化",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-007",
+    "name": "智能电网信息工程",
+    "category_zh": "工学",
+    "sub_category": "电气类",
+    "employment_rate": "90.8%",
+    "median_salary": "6800",
+    "grad_school_ratio": "35%",
+    "job_match_rate": "75%",
+    "recommended_cities": "各省省会",
+    "comment": "电气+计算机交叉，国网认可度高。",
+    "tags": [
+      "工学",
+      "电气类",
+      "智能电网信息工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-008",
+    "name": "电子信息工程",
+    "category_zh": "工学",
+    "sub_category": "电子信息类",
+    "employment_rate": "91.5%",
+    "median_salary": "7000",
+    "grad_school_ratio": "40%",
+    "job_match_rate": "72%",
+    "recommended_cities": "深圳/成都/西安/南京",
+    "comment": "软硬通吃，就业面广。但不读研天花板明显。",
+    "tags": [
+      "工学",
+      "电子信息类",
+      "电子信息工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-009",
+    "name": "通信工程",
+    "category_zh": "工学",
+    "sub_category": "电子信息类",
+    "employment_rate": "89.2%",
+    "median_salary": "6800",
+    "grad_school_ratio": "45%",
+    "job_match_rate": "68%",
+    "recommended_cities": "深圳/成都/西安/南京",
+    "comment": "华为中兴是好去处，但运营商在走下坡路。5G建设红利已过。",
+    "tags": [
+      "工学",
+      "电子信息类",
+      "通信工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-010",
+    "name": "集成电路设计",
+    "category_zh": "工学",
+    "sub_category": "电子信息类",
+    "employment_rate": "93.5%",
+    "median_salary": "12000",
+    "grad_school_ratio": "65%",
+    "job_match_rate": "85%",
+    "recommended_cities": "上海/深圳/北京/成都/西安",
+    "comment": "国家战略方向，人才缺口极大。但本科做不了核心，必须读研甚至读博。",
+    "tags": [
+      "工学",
+      "电子信息类",
+      "集成电路设计",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-011",
+    "name": "机械工程",
+    "category_zh": "工学",
+    "sub_category": "机械类",
+    "employment_rate": "90.1%",
+    "median_salary": "6000",
+    "grad_school_ratio": "35%",
+    "job_match_rate": "70%",
+    "recommended_cities": "苏州/东莞/重庆/武汉",
+    "comment": "万金油专业，但薪资天花板不高。智能制造方向有前景。",
+    "tags": [
+      "工学",
+      "机械类",
+      "机械工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-012",
+    "name": "车辆工程",
+    "category_zh": "工学",
+    "sub_category": "机械类",
+    "employment_rate": "88.5%",
+    "median_salary": "6500",
+    "grad_school_ratio": "40%",
+    "job_match_rate": "65%",
+    "recommended_cities": "上海/长春/武汉/重庆",
+    "comment": "传统车企走下坡，新能源车企在崛起。方向对了很香。",
+    "tags": [
+      "工学",
+      "机械类",
+      "车辆工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-013",
+    "name": "土木工程",
+    "category_zh": "工学",
+    "sub_category": "土木类",
+    "employment_rate": "85.3%",
+    "median_salary": "5500",
+    "grad_school_ratio": "30%",
+    "job_match_rate": "75%",
+    "recommended_cities": "各城市均可",
+    "comment": "基建狂魔时代已经过去。房地产下行，就业率连年走低。慎重。",
+    "tags": [
+      "工学",
+      "土木类",
+      "土木工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-014",
+    "name": "建筑学",
+    "category_zh": "工学",
+    "sub_category": "土木类",
+    "employment_rate": "82.1%",
+    "median_salary": "5800",
+    "grad_school_ratio": "35%",
+    "job_match_rate": "60%",
+    "recommended_cities": "一线城市/新一线",
+    "comment": "五年制，画图画到秃。设计院加班严重，性价比不高。",
+    "tags": [
+      "工学",
+      "土木类",
+      "建筑学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-015",
+    "name": "临床医学(五年制)",
+    "category_zh": "医学",
+    "sub_category": "临床医学类",
+    "employment_rate": "85.2%",
+    "median_salary": "6000(规培期)",
+    "grad_school_ratio": "80%+",
+    "job_match_rate": "95%",
+    "recommended_cities": "各省省会/一线城市",
+    "comment": "学医是最苦的路，没有之一。本科5年+规培3年+专培2-3年。但越老越值钱。",
+    "tags": [
+      "医学",
+      "临床医学类",
+      "临床医学(五年制)",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-016",
+    "name": "临床医学(八年制)",
+    "category_zh": "医学",
+    "sub_category": "临床医学类",
+    "employment_rate": "95%+",
+    "median_salary": "10000+(毕业后)",
+    "grad_school_ratio": "N/A(本硕博连读)",
+    "job_match_rate": "98%",
+    "recommended_cities": "一线城市三甲",
+    "comment": "分数极高，但省了考研的苦。毕业就是博士，进三甲的门票。",
+    "tags": [
+      "医学",
+      "临床医学类",
+      "临床医学(八年制)",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-017",
+    "name": "口腔医学",
+    "category_zh": "医学",
+    "sub_category": "临床医学类",
+    "employment_rate": "92.8%",
+    "median_salary": "8000",
+    "grad_school_ratio": "55%",
+    "job_match_rate": "90%",
+    "recommended_cities": "各城市均可",
+    "comment": "医学里性价比最高的方向之一。AI不能帮你拔牙。自己开诊所也很香。",
+    "tags": [
+      "医学",
+      "临床医学类",
+      "口腔医学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-018",
+    "name": "护理学",
+    "category_zh": "医学",
+    "sub_category": "其他医学类",
+    "employment_rate": "95%+",
+    "median_salary": "5000",
+    "grad_school_ratio": "10%",
+    "job_match_rate": "90%",
+    "recommended_cities": "各城市均可",
+    "comment": "就业率高但辛苦程度也高。夜班是常态。想稳定不怕苦的可以选。",
+    "tags": [
+      "医学",
+      "其他医学类",
+      "护理学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-019",
+    "name": "药学",
+    "category_zh": "医学",
+    "sub_category": "其他医学类",
+    "employment_rate": "88.5%",
+    "median_salary": "5500",
+    "grad_school_ratio": "50%",
+    "job_match_rate": "70%",
+    "recommended_cities": "上海/北京/杭州/南京",
+    "comment": "药企研发岗读研才够格。本科出来做药代或者药店。",
+    "tags": [
+      "医学",
+      "其他医学类",
+      "药学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-020",
+    "name": "数学与应用数学",
+    "category_zh": "理学",
+    "sub_category": "数学类",
+    "employment_rate": "85.5%",
+    "median_salary": "6500",
+    "grad_school_ratio": "60%",
+    "job_match_rate": "45%",
+    "recommended_cities": "一线城市/新一线",
+    "comment": "万能基础学科。转金融/CS/统计都行，但得自己补技能。纯数学就业面窄。",
+    "tags": [
+      "理学",
+      "数学类",
+      "数学与应用数学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-021",
+    "name": "统计学",
+    "category_zh": "理学",
+    "sub_category": "数学类",
+    "employment_rate": "91.2%",
+    "median_salary": "7500",
+    "grad_school_ratio": "45%",
+    "job_match_rate": "70%",
+    "recommended_cities": "北京/上海/深圳/杭州",
+    "comment": "数据时代的宠儿。进可做算法，退可做数据分析。性价比高。",
+    "tags": [
+      "理学",
+      "数学类",
+      "统计学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-022",
+    "name": "物理学",
+    "category_zh": "理学",
+    "sub_category": "物理学类",
+    "employment_rate": "80.3%",
+    "median_salary": "6000",
+    "grad_school_ratio": "70%",
+    "job_match_rate": "35%",
+    "recommended_cities": "一线城市",
+    "comment": "纯物理就业困难，但转行能力极强。想做科研得读到博士。",
+    "tags": [
+      "理学",
+      "物理学类",
+      "物理学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-023",
+    "name": "经济学",
+    "category_zh": "经济学",
+    "sub_category": "经济学类",
+    "employment_rate": "87.6%",
+    "median_salary": "5500",
+    "grad_school_ratio": "45%",
+    "job_match_rate": "55%",
+    "recommended_cities": "北京/上海/深圳",
+    "comment": "看起来高大上，实际上学的都是理论。没有家里资源，出来可能在银行柜台。",
+    "tags": [
+      "经济学",
+      "经济学类",
+      "经济学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-024",
+    "name": "金融学",
+    "category_zh": "经济学",
+    "sub_category": "经济学类",
+    "employment_rate": "85.8%",
+    "median_salary": "6000",
+    "grad_school_ratio": "50%",
+    "job_match_rate": "50%",
+    "recommended_cities": "北京/上海/深圳",
+    "comment": "家里没矿别碰。你看到的是年薪百万基金经理，看不到的是90%的人在银行网点卖理财。",
+    "tags": [
+      "经济学",
+      "经济学类",
+      "金融学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-025",
+    "name": "金融工程",
+    "category_zh": "经济学",
+    "sub_category": "经济学类",
+    "employment_rate": "88.2%",
+    "median_salary": "8000",
+    "grad_school_ratio": "55%",
+    "job_match_rate": "60%",
+    "recommended_cities": "北京/上海/深圳",
+    "comment": "金融+数学+编程。量化方向吃香，但对数学要求极高。",
+    "tags": [
+      "经济学",
+      "经济学类",
+      "金融工程",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-026",
+    "name": "信息管理与信息系统",
+    "category_zh": "管理学",
+    "sub_category": "管理科学与工程类",
+    "employment_rate": "90.5%",
+    "median_salary": "6500",
+    "grad_school_ratio": "35%",
+    "job_match_rate": "65%",
+    "recommended_cities": "北京/上海/深圳/杭州",
+    "comment": "管理+计算机交叉。懂技术又懂业务，企业IT部门需求大。",
+    "tags": [
+      "管理学",
+      "管理科学与工程类",
+      "信息管理与信息系统",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-027",
+    "name": "会计学",
+    "category_zh": "管理学",
+    "sub_category": "工商管理类",
+    "employment_rate": "89.1%",
+    "median_salary": "5000",
+    "grad_school_ratio": "30%",
+    "job_match_rate": "65%",
+    "recommended_cities": "各城市均可",
+    "comment": "铁饭碗但天花板不高。考CPA是关键。AI记账正在替代基础岗位。",
+    "tags": [
+      "管理学",
+      "工商管理类",
+      "会计学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-028",
+    "name": "工商管理",
+    "category_zh": "管理学",
+    "sub_category": "工商管理类",
+    "employment_rate": "82.5%",
+    "median_salary": "5000",
+    "grad_school_ratio": "30%",
+    "job_match_rate": "40%",
+    "recommended_cities": "一线城市",
+    "comment": "学的太杂，什么都不精。毕业等于什么都不会。慎重。",
+    "tags": [
+      "管理学",
+      "工商管理类",
+      "工商管理",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-029",
+    "name": "汉语言文学",
+    "category_zh": "文学",
+    "sub_category": "中国语言文学类",
+    "employment_rate": "83.2%",
+    "median_salary": "4800",
+    "grad_school_ratio": "45%",
+    "job_match_rate": "40%",
+    "recommended_cities": "各城市均可",
+    "comment": "考公考编的好专业。想赚钱别选，想稳定可以考虑。",
+    "tags": [
+      "文学",
+      "中国语言文学类",
+      "汉语言文学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-030",
+    "name": "新闻学",
+    "category_zh": "文学",
+    "sub_category": "新闻传播类",
+    "employment_rate": "78.5%",
+    "median_salary": "5000",
+    "grad_school_ratio": "40%",
+    "job_match_rate": "30%",
+    "recommended_cities": "北京/上海/广州",
+    "comment": "80%学新闻的人没从事本行业。自媒体时代，专业壁垒几乎为零。",
+    "tags": [
+      "文学",
+      "新闻传播类",
+      "新闻学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-031",
+    "name": "网络与新媒体",
+    "category_zh": "文学",
+    "sub_category": "新闻传播类",
+    "employment_rate": "85.3%",
+    "median_salary": "5500",
+    "grad_school_ratio": "25%",
+    "job_match_rate": "55%",
+    "recommended_cities": "北京/上海/杭州/深圳",
+    "comment": "比新闻学实用。但新媒体变化快，学校教的可能已经过时。",
+    "tags": [
+      "文学",
+      "新闻传播类",
+      "网络与新媒体",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-032",
+    "name": "英语",
+    "category_zh": "文学",
+    "sub_category": "外国语言文学类",
+    "employment_rate": "80.5%",
+    "median_salary": "5000",
+    "grad_school_ratio": "40%",
+    "job_match_rate": "35%",
+    "recommended_cities": "一线城市/新一线",
+    "comment": "纯英语专业就业困难。AI翻译越来越强，语言作为工具而非专业更靠谱。",
+    "tags": [
+      "文学",
+      "外国语言文学类",
+      "英语",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-033",
+    "name": "法学",
+    "category_zh": "法学",
+    "sub_category": "法学类",
+    "employment_rate": "72.3%",
+    "median_salary": "5000",
+    "grad_school_ratio": "55%",
+    "job_match_rate": "40%",
+    "recommended_cities": "北京/上海/一线城市",
+    "comment": "法考通过率低，就业两极分化。红圈所年薪百万，但大部分人拿不到入场券。",
+    "tags": [
+      "法学",
+      "法学类",
+      "法学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-034",
+    "name": "知识产权",
+    "category_zh": "法学",
+    "sub_category": "法学类",
+    "employment_rate": "85.8%",
+    "median_salary": "6000",
+    "grad_school_ratio": "40%",
+    "job_match_rate": "60%",
+    "recommended_cities": "北京/上海/深圳/广州",
+    "comment": "新兴方向，专利代理+法律。理工科背景更有优势。",
+    "tags": [
+      "法学",
+      "法学类",
+      "知识产权",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-035",
+    "name": "教育学",
+    "category_zh": "教育学",
+    "sub_category": "教育学类",
+    "employment_rate": "85.5%",
+    "median_salary": "4500",
+    "grad_school_ratio": "50%",
+    "job_match_rate": "50%",
+    "recommended_cities": "各城市均可",
+    "comment": "想当老师选师范类具体学科，别选教育学。教育学学的是理论，不是教学技能。",
+    "tags": [
+      "教育学",
+      "教育学类",
+      "教育学",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-036",
+    "name": "学前教育",
+    "category_zh": "教育学",
+    "sub_category": "教育学类",
+    "employment_rate": "90.2%",
+    "median_salary": "4000",
+    "grad_school_ratio": "10%",
+    "job_match_rate": "85%",
+    "recommended_cities": "各城市均可",
+    "comment": "就业率高但薪资低。生育率下降，长远有隐忧。",
+    "tags": [
+      "教育学",
+      "教育学类",
+      "学前教育",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-037",
+    "name": "视觉传达设计",
+    "category_zh": "艺术学",
+    "sub_category": "设计学类",
+    "employment_rate": "85.5%",
+    "median_salary": "5500",
+    "grad_school_ratio": "20%",
+    "job_match_rate": "60%",
+    "recommended_cities": "北京/上海/深圳/杭州/广州",
+    "comment": "就业面广，UI/平面/品牌都能做。但竞争激烈，作品说话。",
+    "tags": [
+      "艺术学",
+      "设计学类",
+      "视觉传达设计",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-038",
+    "name": "数字媒体艺术",
+    "category_zh": "艺术学",
+    "sub_category": "设计学类",
+    "employment_rate": "87.2%",
+    "median_salary": "6000",
+    "grad_school_ratio": "20%",
+    "job_match_rate": "65%",
+    "recommended_cities": "北京/上海/深圳/成都",
+    "comment": "游戏/影视/互联网都需要。技术+艺术交叉，有前景。",
+    "tags": [
+      "艺术学",
+      "设计学类",
+      "数字媒体艺术",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-039",
+    "name": "生物工程",
+    "category_zh": "天坑警示",
+    "sub_category": "生化环材",
+    "warning": "生化环材四天王, 没读博士别逞强",
+    "comment": "生化环材四天王，没读博士别逞强。本科出来基本找不到对口工作，薪资低，工作环境差。考研是标配，读博才有出路。",
+    "tags": [
+      "天坑",
+      "生物工程",
+      "生化环材",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-040",
+    "name": "化学工程与工艺",
+    "category_zh": "天坑警示",
+    "sub_category": "生化环材",
+    "warning": "生化环材四天王, 没读博士别逞强",
+    "comment": "生化环材四天王，没读博士别逞强。本科出来基本找不到对口工作，薪资低，工作环境差。考研是标配，读博才有出路。",
+    "tags": [
+      "天坑",
+      "化学工程与工艺",
+      "生化环材",
+      "专业"
+    ],
+    "scenario": "volunteer",
+    "employment_rate": 0.96,
+    "median_salary": 12600,
+    "avg_salary": 13400,
+    "postgraduate_rate": 0.14
+  },
+  {
+    "id": "MAJ-041",
+    "name": "环境工程",
+    "category_zh": "天坑警示",
+    "sub_category": "生化环材",
+    "warning": "生化环材四天王, 没读博士别逞强",
+    "comment": "生化环材四天王，没读博士别逞强。本科出来基本找不到对口工作，薪资低，工作环境差。考研是标配，读博才有出路。",
+    "tags": [
+      "天坑",
+      "环境工程",
+      "生化环材",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-042",
+    "name": "材料科学与工程",
+    "category_zh": "天坑警示",
+    "sub_category": "生化环材",
+    "warning": "生化环材四天王, 没读博士别逞强",
+    "comment": "生化环材四天王，没读博士别逞强。本科出来基本找不到对口工作，薪资低，工作环境差。考研是标配，读博才有出路。",
+    "tags": [
+      "天坑",
+      "材料科学与工程",
+      "生化环材",
+      "专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-043",
+    "name": "计算机(学硕)",
+    "category_zh": "考研方向",
+    "sub_category": "考研",
+    "difficulty": "地狱级",
+    "score_line": "350-400+",
+    "comment": "400分不一定有学上，370分可能没书读。竞争最激烈的方向之一。",
+    "tags": [
+      "考研",
+      "计算机(学硕)",
+      "升学"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-044",
+    "name": "法律硕士(非法学)",
+    "category_zh": "考研方向",
+    "sub_category": "考研",
+    "difficulty": "中等偏上",
+    "score_line": "340-370",
+    "comment": "跨考友好，不限本科专业。但就业两极分化严重。",
+    "tags": [
+      "考研",
+      "法律硕士(非法学)",
+      "升学"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-045",
+    "name": "金融硕士",
+    "category_zh": "考研方向",
+    "sub_category": "考研",
+    "difficulty": "高",
+    "score_line": "380+",
+    "comment": "学费贵（动辄十几万），就业看学校。清北复交以下无金融。",
+    "tags": [
+      "考研",
+      "金融硕士",
+      "升学"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-046",
+    "name": "临床医学",
+    "category_zh": "考研方向",
+    "sub_category": "考研",
+    "difficulty": "高",
+    "score_line": "330-370",
+    "comment": "本硕连读最优解。考研是标配，不考研基本进不了三甲。",
+    "tags": [
+      "考研",
+      "临床医学",
+      "升学"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-047",
+    "name": "马克思主义理论",
+    "category_zh": "考研方向",
+    "sub_category": "考研",
+    "difficulty": "较低",
+    "score_line": "320-350",
+    "comment": "相对容易上岸。就业方向：高校思政老师/公务员/党校。",
+    "tags": [
+      "考研",
+      "马克思主义理论",
+      "升学"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-048",
+    "name": "教育学",
+    "category_zh": "考研方向",
+    "sub_category": "考研",
+    "difficulty": "中等",
+    "score_line": "340-360",
+    "comment": "相对容易上岸，但就业面窄。想当老师建议考学科教学方向。",
+    "tags": [
+      "考研",
+      "教育学",
+      "升学"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-049",
+    "name": "物联网工程",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": 0.94,
+    "median_salary": 13300,
+    "avg_salary": 15000,
+    "salary_range": "{\"low\": 10500, \"high\": 22500}",
+    "postgraduate_rate": 0.15,
+    "overseas_rate": 0.14,
+    "comment": "",
+    "tags": [
+      "工学",
+      "计算机类",
+      "物联网工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-050",
+    "name": "智能科学与技术",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": 0.94,
+    "median_salary": 13800,
+    "avg_salary": 15300,
+    "salary_range": "{\"low\": 10710, \"high\": 22950}",
+    "postgraduate_rate": 0.44,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "工学",
+      "计算机类",
+      "智能科学与技术",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-051",
+    "name": "数据科学与大数据技术",
+    "category_zh": "工学",
+    "sub_category": "计算机类",
+    "employment_rate": 0.96,
+    "median_salary": 19400,
+    "avg_salary": 21200,
+    "salary_range": "{\"low\": 14839, \"high\": 31800}",
+    "postgraduate_rate": 0.4,
+    "overseas_rate": 0.1,
+    "comment": "",
+    "tags": [
+      "工学",
+      "计算机类",
+      "数据科学与大数据技术",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-052",
+    "name": "集成电路设计与集成系统",
+    "category_zh": "工学",
+    "sub_category": "电子信息类",
+    "employment_rate": 0.91,
+    "median_salary": 21100,
+    "avg_salary": 23400,
+    "salary_range": "{\"low\": 16379, \"high\": 35100}",
+    "postgraduate_rate": 0.13,
+    "overseas_rate": 0.03,
+    "comment": "",
+    "tags": [
+      "工学",
+      "电子信息类",
+      "集成电路设计与集成系统",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-053",
+    "name": "机械设计制造及其自动化",
+    "category_zh": "工学",
+    "sub_category": "机械类",
+    "employment_rate": 0.96,
+    "median_salary": 13000,
+    "avg_salary": 14500,
+    "salary_range": "{\"low\": 10150, \"high\": 21750}",
+    "postgraduate_rate": 0.28,
+    "overseas_rate": 0.04,
+    "comment": "",
+    "tags": [
+      "工学",
+      "机械类",
+      "机械设计制造及其自动化",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-054",
+    "name": "过程装备与控制工程",
+    "category_zh": "工学",
+    "sub_category": "机械类",
+    "employment_rate": 0.95,
+    "median_salary": 12300,
+    "avg_salary": 13700,
+    "salary_range": "{\"low\": 9590, \"high\": 20550}",
+    "postgraduate_rate": 0.37,
+    "overseas_rate": 0.12,
+    "comment": "",
+    "tags": [
+      "工学",
+      "机械类",
+      "过程装备与控制工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-055",
+    "name": "汽车服务工程",
+    "category_zh": "工学",
+    "sub_category": "机械类",
+    "employment_rate": 0.93,
+    "median_salary": 13900,
+    "avg_salary": 14700,
+    "salary_range": "{\"low\": 10290, \"high\": 22050}",
+    "postgraduate_rate": 0.13,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "工学",
+      "机械类",
+      "汽车服务工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-056",
+    "name": "新能源汽车工程",
+    "category_zh": "工学",
+    "sub_category": "机械类",
+    "employment_rate": 0.94,
+    "median_salary": 11500,
+    "avg_salary": 13500,
+    "salary_range": "{\"low\": 9450, \"high\": 20250}",
+    "postgraduate_rate": 0.45,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "工学",
+      "机械类",
+      "新能源汽车工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-057",
+    "name": "智能交互设计",
+    "category_zh": "工学",
+    "sub_category": "机械类",
+    "employment_rate": 0.96,
+    "median_salary": 16200,
+    "avg_salary": 17300,
+    "salary_range": "{\"low\": 12110, \"high\": 25950}",
+    "postgraduate_rate": 0.16,
+    "overseas_rate": 0.08,
+    "comment": "",
+    "tags": [
+      "工学",
+      "机械类",
+      "智能交互设计",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-058",
+    "name": "机器人工程",
+    "category_zh": "工学",
+    "sub_category": "自动化类",
+    "employment_rate": 0.96,
+    "median_salary": 12500,
+    "avg_salary": 13600,
+    "salary_range": "{\"low\": 9520, \"high\": 20400}",
+    "postgraduate_rate": 0.15,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "自动化类",
+      "机器人工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-059",
+    "name": "邮政工程",
+    "category_zh": "工学",
+    "sub_category": "自动化类",
+    "employment_rate": 0.96,
+    "median_salary": 12500,
+    "avg_salary": 13800,
+    "salary_range": "{\"low\": 9660, \"high\": 20700}",
+    "postgraduate_rate": 0.36,
+    "overseas_rate": 0.03,
+    "comment": "",
+    "tags": [
+      "工学",
+      "自动化类",
+      "邮政工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-060",
+    "name": "智能装备与系统",
+    "category_zh": "工学",
+    "sub_category": "自动化类",
+    "employment_rate": 0.91,
+    "median_salary": 12200,
+    "avg_salary": 13000,
+    "salary_range": "{\"low\": 9100, \"high\": 19500}",
+    "postgraduate_rate": 0.16,
+    "overseas_rate": 0.14,
+    "comment": "",
+    "tags": [
+      "工学",
+      "自动化类",
+      "智能装备与系统",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-061",
+    "name": "城市地下空间工程",
+    "category_zh": "工学",
+    "sub_category": "土木类",
+    "employment_rate": 0.95,
+    "median_salary": 14900,
+    "avg_salary": 16800,
+    "salary_range": "{\"low\": 11760, \"high\": 25200}",
+    "postgraduate_rate": 0.16,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "工学",
+      "土木类",
+      "城市地下空间工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-062",
+    "name": "道路桥梁与渡河工程",
+    "category_zh": "工学",
+    "sub_category": "土木类",
+    "employment_rate": 0.93,
+    "median_salary": 13400,
+    "avg_salary": 14100,
+    "salary_range": "{\"low\": 9870, \"high\": 21150}",
+    "postgraduate_rate": 0.33,
+    "overseas_rate": 0.02,
+    "comment": "",
+    "tags": [
+      "工学",
+      "土木类",
+      "道路桥梁与渡河工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-063",
+    "name": "风景园林",
+    "category_zh": "工学",
+    "sub_category": "建筑类",
+    "employment_rate": 0.91,
+    "median_salary": 10500,
+    "avg_salary": 12300,
+    "salary_range": "{\"low\": 8610, \"high\": 18450}",
+    "postgraduate_rate": 0.13,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "工学",
+      "建筑类",
+      "风景园林",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-064",
+    "name": "历史建筑保护工程",
+    "category_zh": "工学",
+    "sub_category": "建筑类",
+    "employment_rate": 0.95,
+    "median_salary": 12600,
+    "avg_salary": 13500,
+    "salary_range": "{\"low\": 9450, \"high\": 20250}",
+    "postgraduate_rate": 0.3,
+    "overseas_rate": 0.04,
+    "comment": "",
+    "tags": [
+      "工学",
+      "建筑类",
+      "历史建筑保护工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-065",
+    "name": "智慧建筑与建造",
+    "category_zh": "工学",
+    "sub_category": "建筑类",
+    "employment_rate": 0.95,
+    "median_salary": 11000,
+    "avg_salary": 12100,
+    "salary_range": "{\"low\": 8470, \"high\": 18150}",
+    "postgraduate_rate": 0.15,
+    "overseas_rate": 0.14,
+    "comment": "",
+    "tags": [
+      "工学",
+      "建筑类",
+      "智慧建筑与建造",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-066",
+    "name": "水利水电工程",
+    "category_zh": "工学",
+    "sub_category": "水利类",
+    "employment_rate": 0.95,
+    "median_salary": 16600,
+    "avg_salary": 17800,
+    "salary_range": "{\"low\": 12460, \"high\": 26700}",
+    "postgraduate_rate": 0.41,
+    "overseas_rate": 0.02,
+    "comment": "",
+    "tags": [
+      "工学",
+      "水利类",
+      "水利水电工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-067",
+    "name": "智慧水利",
+    "category_zh": "工学",
+    "sub_category": "水利类",
+    "employment_rate": 0.95,
+    "median_salary": 15500,
+    "avg_salary": 17700,
+    "salary_range": "{\"low\": 12390, \"high\": 26550}",
+    "postgraduate_rate": 0.32,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "工学",
+      "水利类",
+      "智慧水利",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-068",
+    "name": "化学工程与工业生物工程",
+    "category_zh": "工学",
+    "sub_category": "化工与制药类",
+    "employment_rate": 0.91,
+    "median_salary": 14000,
+    "avg_salary": 15200,
+    "salary_range": "{\"low\": 10640, \"high\": 22800}",
+    "postgraduate_rate": 0.33,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "工学",
+      "化工与制药类",
+      "化学工程与工业生物工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-069",
+    "name": "材料化学",
+    "category_zh": "工学",
+    "sub_category": "材料类",
+    "employment_rate": 0.95,
+    "median_salary": 12500,
+    "avg_salary": 14200,
+    "salary_range": "{\"low\": 9940, \"high\": 21300}",
+    "postgraduate_rate": 0.29,
+    "overseas_rate": 0.02,
+    "comment": "",
+    "tags": [
+      "工学",
+      "材料类",
+      "材料化学",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-070",
+    "name": "高分子材料与工程",
+    "category_zh": "工学",
+    "sub_category": "材料类",
+    "employment_rate": 0.94,
+    "median_salary": 14200,
+    "avg_salary": 15500,
+    "salary_range": "{\"low\": 10850, \"high\": 23250}",
+    "postgraduate_rate": 0.18,
+    "overseas_rate": 0.05,
+    "comment": "",
+    "tags": [
+      "工学",
+      "材料类",
+      "高分子材料与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-071",
+    "name": "新能源科学与工程",
+    "category_zh": "工学",
+    "sub_category": "能源动力类",
+    "employment_rate": 0.92,
+    "median_salary": 16300,
+    "avg_salary": 17900,
+    "salary_range": "{\"low\": 12530, \"high\": 26850}",
+    "postgraduate_rate": 0.43,
+    "overseas_rate": 0.14,
+    "comment": "",
+    "tags": [
+      "工学",
+      "能源动力类",
+      "新能源科学与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-072",
+    "name": "储能科学与工程",
+    "category_zh": "工学",
+    "sub_category": "能源动力类",
+    "employment_rate": 0.92,
+    "median_salary": 13700,
+    "avg_salary": 15200,
+    "salary_range": "{\"low\": 10640, \"high\": 22800}",
+    "postgraduate_rate": 0.39,
+    "overseas_rate": 0.09,
+    "comment": "",
+    "tags": [
+      "工学",
+      "能源动力类",
+      "储能科学与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-073",
+    "name": "能源与环境系统工程",
+    "category_zh": "工学",
+    "sub_category": "能源动力类",
+    "employment_rate": 0.95,
+    "median_salary": 13800,
+    "avg_salary": 15400,
+    "salary_range": "{\"low\": 10780, \"high\": 23100}",
+    "postgraduate_rate": 0.19,
+    "overseas_rate": 0.05,
+    "comment": "",
+    "tags": [
+      "工学",
+      "能源动力类",
+      "能源与环境系统工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-074",
+    "name": "氢能科学与工程",
+    "category_zh": "工学",
+    "sub_category": "能源动力类",
+    "employment_rate": 0.92,
+    "median_salary": 14200,
+    "avg_salary": 15700,
+    "salary_range": "{\"low\": 10990, \"high\": 23550}",
+    "postgraduate_rate": 0.32,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "能源动力类",
+      "氢能科学与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-075",
+    "name": "飞行器制造工程",
+    "category_zh": "工学",
+    "sub_category": "航空航天类",
+    "employment_rate": 0.95,
+    "median_salary": 12700,
+    "avg_salary": 13800,
+    "salary_range": "{\"low\": 9660, \"high\": 20700}",
+    "postgraduate_rate": 0.4,
+    "overseas_rate": 0.12,
+    "comment": "",
+    "tags": [
+      "工学",
+      "航空航天类",
+      "飞行器制造工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-076",
+    "name": "飞行器环境与生命保障工程",
+    "category_zh": "工学",
+    "sub_category": "航空航天类",
+    "employment_rate": 0.95,
+    "median_salary": 11300,
+    "avg_salary": 12200,
+    "salary_range": "{\"low\": 8540, \"high\": 18300}",
+    "postgraduate_rate": 0.29,
+    "overseas_rate": 0.1,
+    "comment": "",
+    "tags": [
+      "工学",
+      "航空航天类",
+      "飞行器环境与生命保障工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-077",
+    "name": "飞行技术",
+    "category_zh": "工学",
+    "sub_category": "交通运输类",
+    "employment_rate": 0.93,
+    "median_salary": 15200,
+    "avg_salary": 17500,
+    "salary_range": "{\"low\": 12250, \"high\": 26250}",
+    "postgraduate_rate": 0.11,
+    "overseas_rate": 0.04,
+    "comment": "",
+    "tags": [
+      "工学",
+      "交通运输类",
+      "飞行技术",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-078",
+    "name": "船舶电子电气工程",
+    "category_zh": "工学",
+    "sub_category": "交通运输类",
+    "employment_rate": 0.98,
+    "median_salary": 17500,
+    "avg_salary": 20200,
+    "salary_range": "{\"low\": 14140, \"high\": 30300}",
+    "postgraduate_rate": 0.11,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "交通运输类",
+      "船舶电子电气工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-079",
+    "name": "轨道交通电气与控制",
+    "category_zh": "工学",
+    "sub_category": "交通运输类",
+    "employment_rate": 0.92,
+    "median_salary": 15700,
+    "avg_salary": 17600,
+    "salary_range": "{\"low\": 12320, \"high\": 26400}",
+    "postgraduate_rate": 0.35,
+    "overseas_rate": 0.03,
+    "comment": "",
+    "tags": [
+      "工学",
+      "交通运输类",
+      "轨道交通电气与控制",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-080",
+    "name": "智能运输工程",
+    "category_zh": "工学",
+    "sub_category": "交通运输类",
+    "employment_rate": 0.93,
+    "median_salary": 12300,
+    "avg_salary": 14300,
+    "salary_range": "{\"low\": 10010, \"high\": 21450}",
+    "postgraduate_rate": 0.37,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "工学",
+      "交通运输类",
+      "智能运输工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-081",
+    "name": "环境生态工程",
+    "category_zh": "工学",
+    "sub_category": "环境科学与工程类",
+    "employment_rate": 0.93,
+    "median_salary": 11400,
+    "avg_salary": 12400,
+    "salary_range": "{\"low\": 8680, \"high\": 18600}",
+    "postgraduate_rate": 0.44,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "环境科学与工程类",
+      "环境生态工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-082",
+    "name": "环保设备工程",
+    "category_zh": "工学",
+    "sub_category": "环境科学与工程类",
+    "employment_rate": 0.94,
+    "median_salary": 12000,
+    "avg_salary": 13400,
+    "salary_range": "{\"low\": 9380, \"high\": 20100}",
+    "postgraduate_rate": 0.25,
+    "overseas_rate": 0.12,
+    "comment": "",
+    "tags": [
+      "工学",
+      "环境科学与工程类",
+      "环保设备工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-083",
+    "name": "假肢矫形工程",
+    "category_zh": "工学",
+    "sub_category": "生物医学工程类",
+    "employment_rate": 0.95,
+    "median_salary": 13200,
+    "avg_salary": 15000,
+    "salary_range": "{\"low\": 10500, \"high\": 22500}",
+    "postgraduate_rate": 0.1,
+    "overseas_rate": 0.14,
+    "comment": "",
+    "tags": [
+      "工学",
+      "生物医学工程类",
+      "假肢矫形工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-084",
+    "name": "康复工程",
+    "category_zh": "工学",
+    "sub_category": "生物医学工程类",
+    "employment_rate": 0.92,
+    "median_salary": 12000,
+    "avg_salary": 12900,
+    "salary_range": "{\"low\": 9030, \"high\": 19350}",
+    "postgraduate_rate": 0.13,
+    "overseas_rate": 0.05,
+    "comment": "",
+    "tags": [
+      "工学",
+      "生物医学工程类",
+      "康复工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-085",
+    "name": "酿酒工程",
+    "category_zh": "工学",
+    "sub_category": "食品科学与工程类",
+    "employment_rate": 0.96,
+    "median_salary": 11600,
+    "avg_salary": 13200,
+    "salary_range": "{\"low\": 9240, \"high\": 19800}",
+    "postgraduate_rate": 0.14,
+    "overseas_rate": 0.05,
+    "comment": "",
+    "tags": [
+      "工学",
+      "食品科学与工程类",
+      "酿酒工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-086",
+    "name": "烹饪与营养教育",
+    "category_zh": "工学",
+    "sub_category": "食品科学与工程类",
+    "employment_rate": 0.96,
+    "median_salary": 12400,
+    "avg_salary": 13500,
+    "salary_range": "{\"low\": 9450, \"high\": 20250}",
+    "postgraduate_rate": 0.14,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "工学",
+      "食品科学与工程类",
+      "烹饪与营养教育",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-087",
+    "name": "遥感科学与技术",
+    "category_zh": "工学",
+    "sub_category": "测绘类",
+    "employment_rate": 0.92,
+    "median_salary": 13900,
+    "avg_salary": 15900,
+    "salary_range": "{\"low\": 11130, \"high\": 23850}",
+    "postgraduate_rate": 0.28,
+    "overseas_rate": 0.08,
+    "comment": "",
+    "tags": [
+      "工学",
+      "测绘类",
+      "遥感科学与技术",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-088",
+    "name": "地理国情监测",
+    "category_zh": "工学",
+    "sub_category": "测绘类",
+    "employment_rate": 0.92,
+    "median_salary": 14500,
+    "avg_salary": 15400,
+    "salary_range": "{\"low\": 10780, \"high\": 23100}",
+    "postgraduate_rate": 0.17,
+    "overseas_rate": 0.05,
+    "comment": "",
+    "tags": [
+      "工学",
+      "测绘类",
+      "地理国情监测",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-089",
+    "name": "石油工程",
+    "category_zh": "工学",
+    "sub_category": "矿业类",
+    "employment_rate": 0.93,
+    "median_salary": 11500,
+    "avg_salary": 12500,
+    "salary_range": "{\"low\": 8750, \"high\": 18750}",
+    "postgraduate_rate": 0.42,
+    "overseas_rate": 0.12,
+    "comment": "",
+    "tags": [
+      "工学",
+      "矿业类",
+      "石油工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-090",
+    "name": "矿物加工工程",
+    "category_zh": "工学",
+    "sub_category": "矿业类",
+    "employment_rate": 0.92,
+    "median_salary": 13800,
+    "avg_salary": 14600,
+    "salary_range": "{\"low\": 10220, \"high\": 21900}",
+    "postgraduate_rate": 0.25,
+    "overseas_rate": 0.09,
+    "comment": "",
+    "tags": [
+      "工学",
+      "矿业类",
+      "矿物加工工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-091",
+    "name": "油气储运工程",
+    "category_zh": "工学",
+    "sub_category": "矿业类",
+    "employment_rate": 0.92,
+    "median_salary": 15900,
+    "avg_salary": 17100,
+    "salary_range": "{\"low\": 11970, \"high\": 25650}",
+    "postgraduate_rate": 0.12,
+    "overseas_rate": 0.04,
+    "comment": "",
+    "tags": [
+      "工学",
+      "矿业类",
+      "油气储运工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-092",
+    "name": "海洋油气工程",
+    "category_zh": "工学",
+    "sub_category": "矿业类",
+    "employment_rate": 0.93,
+    "median_salary": 14200,
+    "avg_salary": 15000,
+    "salary_range": "{\"low\": 10500, \"high\": 22500}",
+    "postgraduate_rate": 0.28,
+    "overseas_rate": 0.08,
+    "comment": "",
+    "tags": [
+      "工学",
+      "矿业类",
+      "海洋油气工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-093",
+    "name": "服装设计与工程",
+    "category_zh": "工学",
+    "sub_category": "纺织类",
+    "employment_rate": 0.96,
+    "median_salary": 12900,
+    "avg_salary": 14700,
+    "salary_range": "{\"low\": 10290, \"high\": 22050}",
+    "postgraduate_rate": 0.11,
+    "overseas_rate": 0.12,
+    "comment": "",
+    "tags": [
+      "工学",
+      "纺织类",
+      "服装设计与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-094",
+    "name": "服装设计与工艺教育",
+    "category_zh": "工学",
+    "sub_category": "纺织类",
+    "employment_rate": 0.92,
+    "median_salary": 11100,
+    "avg_salary": 12900,
+    "salary_range": "{\"low\": 9030, \"high\": 19350}",
+    "postgraduate_rate": 0.22,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "纺织类",
+      "服装设计与工艺教育",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-095",
+    "name": "轻化工程",
+    "category_zh": "工学",
+    "sub_category": "轻工类",
+    "employment_rate": 0.92,
+    "median_salary": 14700,
+    "avg_salary": 16600,
+    "salary_range": "{\"low\": 11620, \"high\": 24900}",
+    "postgraduate_rate": 0.34,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "轻工类",
+      "轻化工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-096",
+    "name": "包装工程",
+    "category_zh": "工学",
+    "sub_category": "轻工类",
+    "employment_rate": 0.95,
+    "median_salary": 14600,
+    "avg_salary": 16100,
+    "salary_range": "{\"low\": 11270, \"high\": 24150}",
+    "postgraduate_rate": 0.26,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "轻工类",
+      "包装工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-097",
+    "name": "香料香精技术与工程",
+    "category_zh": "工学",
+    "sub_category": "轻工类",
+    "employment_rate": 0.92,
+    "median_salary": 11900,
+    "avg_salary": 13400,
+    "salary_range": "{\"low\": 9380, \"high\": 20100}",
+    "postgraduate_rate": 0.17,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "工学",
+      "轻工类",
+      "香料香精技术与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-098",
+    "name": "武器系统与工程",
+    "category_zh": "工学",
+    "sub_category": "兵器类",
+    "employment_rate": 0.93,
+    "median_salary": 13200,
+    "avg_salary": 14300,
+    "salary_range": "{\"low\": 10010, \"high\": 21450}",
+    "postgraduate_rate": 0.17,
+    "overseas_rate": 0.09,
+    "comment": "",
+    "tags": [
+      "工学",
+      "兵器类",
+      "武器系统与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-099",
+    "name": "武器发射工程",
+    "category_zh": "工学",
+    "sub_category": "兵器类",
+    "employment_rate": 0.95,
+    "median_salary": 11400,
+    "avg_salary": 12400,
+    "salary_range": "{\"low\": 8680, \"high\": 18600}",
+    "postgraduate_rate": 0.14,
+    "overseas_rate": 0.15,
+    "comment": "",
+    "tags": [
+      "工学",
+      "兵器类",
+      "武器发射工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-100",
+    "name": "特种能源技术与工程",
+    "category_zh": "工学",
+    "sub_category": "兵器类",
+    "employment_rate": 0.94,
+    "median_salary": 12000,
+    "avg_salary": 13000,
+    "salary_range": "{\"low\": 9100, \"high\": 19500}",
+    "postgraduate_rate": 0.28,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "兵器类",
+      "特种能源技术与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-101",
+    "name": "装甲车辆工程",
+    "category_zh": "工学",
+    "sub_category": "兵器类",
+    "employment_rate": 0.94,
+    "median_salary": 15600,
+    "avg_salary": 17800,
+    "salary_range": "{\"low\": 12460, \"high\": 26700}",
+    "postgraduate_rate": 0.29,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "工学",
+      "兵器类",
+      "装甲车辆工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-102",
+    "name": "核工程与核技术",
+    "category_zh": "工学",
+    "sub_category": "核工程类",
+    "employment_rate": 0.95,
+    "median_salary": 12300,
+    "avg_salary": 13100,
+    "salary_range": "{\"low\": 9170, \"high\": 19650}",
+    "postgraduate_rate": 0.4,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "工学",
+      "核工程类",
+      "核工程与核技术",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-103",
+    "name": "辐射防护与核安全",
+    "category_zh": "工学",
+    "sub_category": "核工程类",
+    "employment_rate": 0.94,
+    "median_salary": 11400,
+    "avg_salary": 12100,
+    "salary_range": "{\"low\": 8470, \"high\": 18150}",
+    "postgraduate_rate": 0.28,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "工学",
+      "核工程类",
+      "辐射防护与核安全",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-104",
+    "name": "农业水利工程",
+    "category_zh": "工学",
+    "sub_category": "农业工程类",
+    "employment_rate": 0.95,
+    "median_salary": 11200,
+    "avg_salary": 12400,
+    "salary_range": "{\"low\": 8680, \"high\": 18600}",
+    "postgraduate_rate": 0.26,
+    "overseas_rate": 0.11,
+    "comment": "",
+    "tags": [
+      "工学",
+      "农业工程类",
+      "农业水利工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-105",
+    "name": "林产化工",
+    "category_zh": "工学",
+    "sub_category": "林业工程类",
+    "employment_rate": 0.96,
+    "median_salary": 13800,
+    "avg_salary": 15500,
+    "salary_range": "{\"low\": 10850, \"high\": 23250}",
+    "postgraduate_rate": 0.13,
+    "overseas_rate": 0.1,
+    "comment": "",
+    "tags": [
+      "工学",
+      "林业工程类",
+      "林产化工",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-106",
+    "name": "家具设计与工程",
+    "category_zh": "工学",
+    "sub_category": "林业工程类",
+    "employment_rate": 0.95,
+    "median_salary": 11400,
+    "avg_salary": 12400,
+    "salary_range": "{\"low\": 8680, \"high\": 18600}",
+    "postgraduate_rate": 0.42,
+    "overseas_rate": 0.03,
+    "comment": "",
+    "tags": [
+      "工学",
+      "林业工程类",
+      "家具设计与工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-107",
+    "name": "哈医学",
+    "category_zh": "医学",
+    "sub_category": "中医学类",
+    "employment_rate": 0.91,
+    "median_salary": 14000,
+    "avg_salary": 14800,
+    "salary_range": "{\"low\": 10360, \"high\": 22200}",
+    "postgraduate_rate": 0.38,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "医学",
+      "中医学类",
+      "哈医学",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-108",
+    "name": "药物制剂",
+    "category_zh": "医学",
+    "sub_category": "药学类",
+    "employment_rate": 0.91,
+    "median_salary": 13000,
+    "avg_salary": 14600,
+    "salary_range": "{\"low\": 10220, \"high\": 21900}",
+    "postgraduate_rate": 0.36,
+    "overseas_rate": 0.04,
+    "comment": "",
+    "tags": [
+      "医学",
+      "药学类",
+      "药物制剂",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-109",
+    "name": "医学检验技术",
+    "category_zh": "医学",
+    "sub_category": "医学技术类",
+    "employment_rate": 0.92,
+    "median_salary": 12500,
+    "avg_salary": 13900,
+    "salary_range": "{\"low\": 9730, \"high\": 20850}",
+    "postgraduate_rate": 0.26,
+    "overseas_rate": 0.15,
+    "comment": "",
+    "tags": [
+      "医学",
+      "医学技术类",
+      "医学检验技术",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-110",
+    "name": "口腔医学技术",
+    "category_zh": "医学",
+    "sub_category": "医学技术类",
+    "employment_rate": 0.98,
+    "median_salary": 13600,
+    "avg_salary": 14600,
+    "salary_range": "{\"low\": 10220, \"high\": 21900}",
+    "postgraduate_rate": 0.35,
+    "overseas_rate": 0.05,
+    "comment": "",
+    "tags": [
+      "医学",
+      "医学技术类",
+      "口腔医学技术",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-111",
+    "name": "生物医药数据科学",
+    "category_zh": "医学",
+    "sub_category": "医学技术类",
+    "employment_rate": 0.96,
+    "median_salary": 15900,
+    "avg_salary": 17600,
+    "salary_range": "{\"low\": 12320, \"high\": 26400}",
+    "postgraduate_rate": 0.31,
+    "overseas_rate": 0.09,
+    "comment": "",
+    "tags": [
+      "医学",
+      "医学技术类",
+      "生物医药数据科学",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-112",
+    "name": "助产学",
+    "category_zh": "医学",
+    "sub_category": "护理学类",
+    "employment_rate": 0.93,
+    "median_salary": 12100,
+    "avg_salary": 12800,
+    "salary_range": "{\"low\": 8960, \"high\": 19200}",
+    "postgraduate_rate": 0.31,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "医学",
+      "护理学类",
+      "助产学",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-113",
+    "name": "税收学",
+    "category_zh": "经济学",
+    "sub_category": "财政学类",
+    "employment_rate": 0.92,
+    "median_salary": 13500,
+    "avg_salary": 14700,
+    "salary_range": "{\"low\": 10290, \"high\": 22050}",
+    "postgraduate_rate": 0.38,
+    "overseas_rate": 0.04,
+    "comment": "",
+    "tags": [
+      "经济学",
+      "财政学类",
+      "税收学",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-114",
+    "name": "经济与金融",
+    "category_zh": "经济学",
+    "sub_category": "金融学类",
+    "employment_rate": 0.91,
+    "median_salary": 13800,
+    "avg_salary": 14500,
+    "salary_range": "{\"low\": 10150, \"high\": 21750}",
+    "postgraduate_rate": 0.29,
+    "overseas_rate": 0.07,
+    "comment": "",
+    "tags": [
+      "经济学",
+      "金融学类",
+      "经济与金融",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-115",
+    "name": "互联网金融",
+    "category_zh": "经济学",
+    "sub_category": "金融学类",
+    "employment_rate": 0.95,
+    "median_salary": 12000,
+    "avg_salary": 13000,
+    "salary_range": "{\"low\": 9100, \"high\": 19500}",
+    "postgraduate_rate": 0.32,
+    "overseas_rate": 0.12,
+    "comment": "",
+    "tags": [
+      "经济学",
+      "金融学类",
+      "互联网金融",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-116",
+    "name": "金融科技",
+    "category_zh": "经济学",
+    "sub_category": "金融学类",
+    "employment_rate": 0.95,
+    "median_salary": 10900,
+    "avg_salary": 12800,
+    "salary_range": "{\"low\": 8960, \"high\": 19200}",
+    "postgraduate_rate": 0.29,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "经济学",
+      "金融学类",
+      "金融科技",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-117",
+    "name": "零售业管理",
+    "category_zh": "管理学",
+    "sub_category": "工商管理类",
+    "employment_rate": 0.92,
+    "median_salary": 10800,
+    "avg_salary": 12100,
+    "salary_range": "{\"low\": 8470, \"high\": 18150}",
+    "postgraduate_rate": 0.34,
+    "overseas_rate": 0.06,
+    "comment": "",
+    "tags": [
+      "管理学",
+      "工商管理类",
+      "零售业管理",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-118",
+    "name": "公共事业管理",
+    "category_zh": "管理学",
+    "sub_category": "公共管理类",
+    "employment_rate": 0.91,
+    "median_salary": 12100,
+    "avg_salary": 13800,
+    "salary_range": "{\"low\": 9660, \"high\": 20700}",
+    "postgraduate_rate": 0.32,
+    "overseas_rate": 0.09,
+    "comment": "",
+    "tags": [
+      "管理学",
+      "公共管理类",
+      "公共事业管理",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-119",
+    "name": "供应链管理",
+    "category_zh": "管理学",
+    "sub_category": "物流管理与工程类",
+    "employment_rate": 0.91,
+    "median_salary": 11300,
+    "avg_salary": 13000,
+    "salary_range": "{\"low\": 9100, \"high\": 19500}",
+    "postgraduate_rate": 0.28,
+    "overseas_rate": 0.09,
+    "comment": "",
+    "tags": [
+      "管理学",
+      "物流管理与工程类",
+      "供应链管理",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  },
+  {
+    "id": "MAJ-120",
+    "name": "质量管理工程",
+    "category_zh": "管理学",
+    "sub_category": "工业工程类",
+    "employment_rate": 0.92,
+    "median_salary": 11400,
+    "avg_salary": 12900,
+    "salary_range": "{\"low\": 9030, \"high\": 19350}",
+    "postgraduate_rate": 0.22,
+    "overseas_rate": 0.13,
+    "comment": "",
+    "tags": [
+      "管理学",
+      "工业工程类",
+      "质量管理工程",
+      "热门专业"
+    ],
+    "scenario": "volunteer"
+  }
+]

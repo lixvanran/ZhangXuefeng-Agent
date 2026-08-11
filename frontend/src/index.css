@@ -1,0 +1,205 @@
+@import 'katex/dist/katex.min.css';
+@import 'highlight.js/styles/github.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ====== v0.9.0 苹果风基础 ====== */
+:root {
+  --apple-bg-1: #f5f5f7;        /* 苹果经典灰白 */
+  --apple-bg-2: #fbfbfd;
+  --apple-bg-blue: #e8f0fe;     /* 浅蓝 */
+  --apple-bg-purple: #f5e8fe;   /* 浅紫 */
+  --apple-bg-pink: #fee8f0;     /* 浅粉 */
+  --apple-text: #1d1d1f;        /* 苹果深灰 */
+  --apple-text-2: #6e6e73;      /* 苹果次级灰 */
+  --apple-border: rgba(0, 0, 0, 0.08);
+  --apple-glass: rgba(255, 255, 255, 0.72);
+  --apple-shadow: 0 4px 16px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --apple-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+    'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--apple-text);
+  background: var(--apple-bg-1);
+  letter-spacing: -0.01em;
+}
+
+/* 苹果风渐变背景 (主背景) */
+.apple-bg {
+  background:
+    radial-gradient(ellipse at 0% 0%, var(--apple-bg-blue) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, var(--apple-bg-purple) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, var(--apple-bg-pink) 0%, transparent 50%),
+    var(--apple-bg-1);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 苹果风毛玻璃卡片 */
+.apple-glass {
+  background: var(--apple-glass);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid var(--apple-border);
+  box-shadow: var(--apple-shadow);
+  border-radius: 16px;
+}
+
+.apple-glass-strong {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(200%) blur(30px);
+  -webkit-backdrop-filter: saturate(200%) blur(30px);
+  border: 1px solid var(--apple-border);
+  box-shadow: var(--apple-shadow);
+  border-radius: 18px;
+}
+
+/* 苹果风按钮 (胶囊) */
+.apple-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: 980px;        /* 苹果经典胶囊 */
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.apple-btn-primary {
+  background: var(--apple-text);
+  color: #fff;
+}
+.apple-btn-primary:hover {
+  background: #000;
+  transform: scale(1.02);
+}
+
+.apple-btn-secondary {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--apple-text);
+}
+.apple-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* 苹果风输入 */
+.apple-input {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--apple-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 15px;
+  color: var(--apple-text);
+  outline: none;
+  transition: all 0.18s ease;
+  width: 100%;
+}
+.apple-input:focus {
+  border-color: var(--apple-text);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+/* 苹果风标题 (大字号, 紧凑字距) */
+.apple-h1 {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--apple-text);
+}
+.apple-h2 {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.apple-h3 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+.apple-sub {
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--apple-text-2);
+  line-height: 1.4;
+}
+
+/* 自定义滚动条 (苹果风细) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* 打字机光标 */
+.cursor-blink::after {
+  content: '▊';
+  margin-left: 2px;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Markdown 样式 (保留) */
+.markdown-body {
+  line-height: 1.7;
+}
+.markdown-body p { margin: 0.5em 0; }
+.markdown-body strong {
+  font-weight: 600;
+  color: var(--apple-text);
+}
+.markdown-body ul, .markdown-body ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+.markdown-body li { margin: 0.2em 0; }
+.markdown-body code {
+  background: rgba(0,0,0,0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.markdown-body table { border-collapse: collapse; margin: 0.8em 0; width: 100%; font-size: 0.95em; }
+.markdown-body th, .markdown-body td { border: 1px solid #e5e7eb; padding: 0.4em 0.7em; text-align: left; }
+.markdown-body th { background: #fafafa; font-weight: 600; }
+.markdown-body tr:nth-child(even) td { background: #fafafa; }
+.markdown-body pre { background: #f6f8fa; border-radius: 8px; padding: 0.8em 1em; overflow-x: auto; font-size: 0.9em; margin: 0.8em 0; }
+.markdown-body pre code { background: transparent; padding: 0; border-radius: 0; font-size: 1em; }
+.markdown-body h1 { font-size: 1.4em; font-weight: 700; margin: 0.8em 0 0.4em; }
+.markdown-body h2 { font-size: 1.2em; font-weight: 700; margin: 0.7em 0 0.4em; }
+.markdown-body h3 { font-size: 1.05em; font-weight: 600; margin: 0.6em 0 0.3em; }
+.markdown-body blockquote { border-left: 3px solid #d1d1d6; background: #fafafa; margin: 0.6em 0; padding: 0.4em 0.8em; color: #6e6e73; }
+.markdown-body .katex-display { margin: 0.8em 0; overflow-x: auto; overflow-y: hidden; }
+
+/* 动画 (苹果风缓动) */
+@keyframes apple-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.apple-fade-in {
+  animation: apple-fade-in 0.4s cubic-bezier(0.28, 0.11, 0.32, 1);
+}

@@ -1,0 +1,68 @@
+# ===== 敏感信息 =====
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/.env.local
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ===== Node =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+dist/
+build/
+release/
+*.tsbuildinfo
+
+# ===== 数据 & 缓存 =====
+data/
+backend/data/
+tts_cache/
+*.db
+*.sqlite
+*.sqlite3
+chroma/
+user_index.json
+
+# ===== 上传 =====
+uploads/
+backend/data/uploads/
+
+# ===== 音频样本 =====
+samples/*.mp3
+samples/*.wav
+samples/*.m4a
+!samples/INSTRUCTIONS.md
+!samples/.gitkeep
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ===== 测试 & 临时 =====
+*.log
+*.tmp
+.temp/
+diagnose.txt
+
+# ===== Electron =====
+electron/dist/
