@@ -1,4 +1,4 @@
-# 张雪峰智能体 v0.8.0
+# 张雪峰智能体 v0.9.1
 
 > 敢说真话的 AI 备考与志愿填报助手
 
@@ -20,9 +20,9 @@
 
 要停止服务，**双击 `停止.bat`**。
 
-## v0.8.0 升级要点
+## v0.9.1 升级要点
 
-> **v0.8.0 重构了路由架构 + 加了启动自检和前端诊断页**
+> **v0.9.1 重构了路由架构 + 加了启动自检和前端诊断页**
 
 - **架构重构**：路由逻辑从 `app/agent/pipeline/complexity.py` + `app/agent/llm/router.py` 合并到新的 `app/agent/routing/` 模块
   - `classifier.py` — `ComplexityClassifier` Protocol + 3 个实现 (MiniMaxM3 / Heuristic / Ensemble)
@@ -32,7 +32,7 @@
 - **启动自检**：启动时自动 ping OpenRouter 验证 key，401 立刻在日志里给诊断
 - **前端诊断页**：左侧导航"系统诊断" → 一键检测 key 状态，按步骤给解决方案
 - **三档路由**：闲聊走 Qwen 7B，标准问答走 Sonnet，复杂规划也走 Sonnet（Opus 太贵）
-- **TTS 修复**：之前完全跑不起来，v0.8.0 接好 MiniMax TTS，配上 `MINIMAX_API_KEY` 就能用；不配也不影响聊天
+- **TTS 修复**：之前完全跑不起来，现已接好 MiniMax TTS，配上 `MINIMAX_API_KEY` 就能用；不配也不影响聊天
 - **Embedding 二选一**：无 key → 本地 TF-IDF；配 `OPENAI_API_KEY` → 真语义 embedding
 - **数据库迁移安全化**：之前缺列会 DROP 整张表清空数据，现在 ALTER TABLE 补列
 - **加 .gitignore**：之前的版本没 .gitignore，API key 一推就裸奔
