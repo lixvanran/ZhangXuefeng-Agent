@@ -57,7 +57,7 @@ OPENAI_API_KEY=xxx
 
 ## 出问题？
 
-**双击 `诊断.bat`**，把生成的 `diagnose.txt` 发给我。
+**双击 `诊断.bat`**，把生成的 `diagnose.txt` 发给张老师。
 
 ## 目录结构
 
