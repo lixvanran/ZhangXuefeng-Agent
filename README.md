@@ -117,14 +117,14 @@ zhangxuefeng-demo/
 │   │   │   ├── routing/           ⭐ 路由模块 (v0.8 新增)
 │   │   │   │   ├── classifier.py   - 复杂度分类器 (MiniMaxM3 + Heuristic + Ensemble)
 │   │   │   │   ├── tier_router.py  - 档位路由器 (v0.9.1 读用户偏好)
-│   │   │   │   └── model_whitelist.py  ⭐ v0.9.1 新增 - 严格白名单
+│   │   │   │   └── model_whitelist.py  ⭐ v0.9.2 新增 - 严格白名单
 │   │   │   ├── llm/              - LLM 客户端 (base / openrouter / deep_thinking / vision)
 │   │   │   ├── rag/              - RAG 检索
 │   │   │   ├── memory/           - 会话/记忆
 │   │   │   ├── pipeline/          - 消息处理管道
 │   │   │   ├── prompts/           - System prompt 拼装
 │   │   │   ├── search/            - 联网搜索
-│   │   │   ├── tools/             - 工具 (含错题本 v0.9.1 新增 wrong_book.py)
+│   │   │   ├── tools/             - 工具 (含错题本 v0.9.2 新增 wrong_book.py)
 │   │   │   └── orchestrator.py    - 总编排
 │   │   ├── routers/      - API 路由 (chat / resources / conversations / user / tts / workspace / settings)
 │   │   ├── services/     - 业务服务
