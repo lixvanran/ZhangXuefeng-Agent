@@ -19,6 +19,12 @@ from app.agent.tools.workspace import (
     workspace_list, workspace_read, workspace_write,
     workspace_search, workspace_delete, workspace_info,
 )
+from app.agent.tools.wrong_book import (
+    wrong_book_scan_uploads,         # v0.9.1 新增
+    wrong_book_describe_file,        # v0.9.1 新增
+    wrong_book_add_mistake,          # v0.9.1 新增
+    wrong_book_query,                # v0.9.1 新增
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +49,11 @@ TOOL_REGISTRY: Dict[str, Callable[..., Awaitable[Dict]]] = {
     "workspace_search": workspace_search,
     "workspace_delete": workspace_delete,
     "workspace_info": workspace_info,
+    # ===== v0.9.1 错题本工具 =====
+    "wrong_book_scan_uploads": wrong_book_scan_uploads,
+    "wrong_book_describe_file": wrong_book_describe_file,
+    "wrong_book_add_mistake": wrong_book_add_mistake,
+    "wrong_book_query": wrong_book_query,
 }
 
 

@@ -33,7 +33,8 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set) => ({
   scenario: 'volunteer',
-  setScenario: (s) => set({ scenario: s, conversationId: null, messages: [] }),
+  // v0.9.1: 修 bug — 切换场景不再清空当前对话, 用户需要主动点"新对话"才会建新对话
+  setScenario: (s) => set({ scenario: s }),
 
   conversationId: null,
   setConversationId: (id) => set({ conversationId: id }),

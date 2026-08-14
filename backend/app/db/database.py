@@ -1,9 +1,12 @@
 """Database ORM models"""
-from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON
+import logging
+from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, DateTime, ForeignKey, JSON, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -88,6 +91,17 @@ class ResourceORM(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
+# ========== v0.9.1: User Preferences (key-value, 存模型选择/UI 偏好) ==========
+class UserPreferenceORM(Base):
+    __tablename__ = "user_preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True, nullable=False, default=1)
+    key = Column(String(64), nullable=False, index=True)
+    value = Column(JSON, nullable=True)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
 # ========== Database setup ==========
 engine = create_engine(
     settings.DATABASE_URL,
@@ -99,6 +113,11 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def init_db():
     """Create tables and seed demo data. Handles simple schema migration."""
     _migrate_if_needed()
+    # v0.9.1: 显式确保所有 ORM 类都注册到 Base.metadata
+    # (在某些 Python/SQLAlchemy 版本下, 跨模块 import 可能没触发 model 注册)
+    logger.debug(
+        f"init_db: Base.metadata has tables: {sorted(Base.metadata.tables.keys())}"
+    )
     Base.metadata.create_all(bind=engine)
     _seed_demo()
 
@@ -110,6 +129,25 @@ def _migrate_if_needed():
     """
     from sqlalchemy import inspect, text
     inspector = inspect(engine)
+    # v0.9.1: 兜底 — 如果 user_preferences 表不存在 (老数据库升级), 用 SQL 创建
+    with engine.connect() as conn:
+        if 'user_preferences' not in inspector.get_table_names():
+            logger.info("Schema migration: creating user_preferences table")
+            try:
+                conn.execute(text("""
+                    CREATE TABLE user_preferences (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL DEFAULT 1,
+                        "key" VARCHAR(64) NOT NULL,
+                        value JSON,
+                        updated_at DATETIME
+                    )
+                """))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_user_preferences_user_id ON user_preferences (user_id)"))
+                conn.execute(text('CREATE INDEX IF NOT EXISTS ix_user_preferences_key ON user_preferences ("key")'))
+                conn.commit()
+            except Exception as e:
+                logger.warning(f"Failed to create user_preferences: {e}")
     if 'resources' not in inspector.get_table_names():
         return  # 全新安装, 让 create_all 处理
     existing_cols = {c['name'] for c in inspector.get_columns('resources')}

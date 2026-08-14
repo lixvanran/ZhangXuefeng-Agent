@@ -1,7 +1,8 @@
 """Tier Router - 根据复杂度选 LLM 档位
 - 3 档: low / medium / high
 - 每档有: primary 模型 + fallback 链
-- 配置在 .env, 不在代码里写死
+- v0.9.1: primary 改成读用户偏好 (DB), 不再硬编码
+- 白名单严格按用户 2026-08-11 拍板
 - 未来加: 动态成本感知路由, 限流感知路由等
 """
 from __future__ import annotations
@@ -17,6 +18,11 @@ from app.agent.routing.classifier import (
     ClassificationResult,
     get_classifier,
 )
+from app.agent.routing.model_whitelist import (
+    MODEL_WHITELIST,
+    DEFAULT_TIER_MODELS,
+    is_model_allowed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,29 +36,27 @@ class TierInfo:
     tier_label: str  # "low" | "medium" | "high"
 
 
-# 默认档位定义 — 用户指定 2026-07-28
-# primary 严格按用户拍板: low=minimaxM3, mid=Z.ai GLM 5.2, high=Grok 4.20 Multi-Agent
-# fallback 自己定 — OpenRouter 真实存在的模型, 失败时按顺序降级
-# 实测 2026-07-28: 这个 OpenRouter 账号调不通 OpenAI / Anthropic / Google / Llama 4 (全 region 限)
-#   但能调 xAI Grok 全系列 — Grok 4.20 = xAI 最新旗舰, Multi-Agent 模式 = 多智能体协作
-#   (用户 2026-07-28 改用 Grok 4.20 Multi-Agent 顶 high 档)
+# 默认档位定义 (用户 2026-08-11 拍板)
+# low=minimaxM2.7 (默认), mid=minimaxM3, high=minimaxM3
+# 实际值从 model_whitelist.DEFAULT_TIER_MODELS 读
+# fallback 链按白名单内其他模型降级
 DEFAULT_TIERS = {
     "low": TierInfo(
-        primary="minimax/minimax-m3",
-        fallback=["minimax/minimax-m2.7", "z-ai/glm-4.5-air", "deepseek/deepseek-chat-v3.1"],
-        description="MiniMax M3 - 闲聊、简单查询、1-2 步任务 (国产便宜中文强)",
+        primary=DEFAULT_TIER_MODELS["low"],
+        fallback=[m for m in MODEL_WHITELIST["low"] if m != DEFAULT_TIER_MODELS["low"]],
+        description="闲聊 / 简单查询 / 1-2 步任务",
         tier_label="low",
     ),
     "medium": TierInfo(
-        primary="z-ai/glm-5.2",
-        fallback=["minimax/minimax-m2.7", "z-ai/glm-5-turbo", "deepseek/deepseek-chat-v3.1"],
-        description="Z.ai GLM 5.2 - 标准问答、多步推理 (国产旗舰, 编码能力强)",
+        primary=DEFAULT_TIER_MODELS["medium"],
+        fallback=[m for m in MODEL_WHITELIST["medium"] if m != DEFAULT_TIER_MODELS["medium"]],
+        description="标准问答 / 多步推理",
         tier_label="medium",
     ),
     "high": TierInfo(
-        primary="x-ai/grok-4.20-multi-agent",
-        fallback=["x-ai/grok-4.20", "x-ai/grok-4.5", "z-ai/glm-5.2", "z-ai/glm-5-turbo", "minimax/minimax-m2.7", "deepseek/deepseek-chat-v3.1"],
-        description="Grok 4.20 Multi-Agent - 复杂规划/深度推理 (xAI 最新旗舰, 多智能体协作)",
+        primary=DEFAULT_TIER_MODELS["high"],
+        fallback=[m for m in MODEL_WHITELIST["high"] if m != DEFAULT_TIER_MODELS["high"]],
+        description="复杂规划 / 深度推理 (需开启 high 模式)",
         tier_label="high",
     ),
 }
@@ -78,29 +82,60 @@ class TierRouter:
         )
 
     def _load_tiers_from_env(self) -> dict[str, TierInfo]:
-        """从 settings 读档位配置, 没有就 fallback 到 DEFAULT_TIERS"""
-        def parse_fb(raw: str, default: list[str]) -> list[str]:
-            if not raw:
-                return default
-            out = [m.strip() for m in raw.split(",") if m.strip()]
-            return out if out else default
+        """v0.9.1: 从用户偏好 (DB) 读档位配置, 兜底用白名单默认值
+
+        加载顺序:
+        1. DB user_preferences 表 (用户在前端"系统设置"改的)
+        2. 白名单默认值 (model_whitelist.DEFAULT_TIER_MODELS)
+        3. 兜底校验: 不在白名单的模型 fallback 到默认
+        """
+        from app.db.database import SessionLocal, UserPreferenceORM
+
+        def read_user_pref(key: str, default: str) -> str:
+            """从 DB 读用户偏好, 找不到或不在白名单就 return default"""
+            try:
+                db = SessionLocal()
+                try:
+                    row = db.query(UserPreferenceORM).filter_by(
+                        user_id=1, key=key
+                    ).first()
+                    if row and row.value:
+                        model = row.value if isinstance(row.value, str) else str(row.value)
+                        # 兜底: 必须在该档白名单内
+                        tier = key.replace("model_", "")
+                        if is_model_allowed(tier, model):
+                            return model
+                        else:
+                            logger.warning(
+                                f"User pref {key}={model} not in whitelist, "
+                                f"fallback to default"
+                            )
+                finally:
+                    db.close()
+            except Exception as e:
+                logger.warning(f"Failed to read user pref {key}: {e}")
+            return default
+
+        def build_fallback(tier: str, primary: str) -> list[str]:
+            """从白名单构建 fallback 链 (排除 primary)"""
+            return [m for m in MODEL_WHITELIST[tier] if m != primary]
 
         return {
             "low": TierInfo(
-                primary=settings.TIER_MODEL_LOW or DEFAULT_TIERS["low"].primary,
-                fallback=parse_fb(settings.TIER_FALLBACK_LOW, DEFAULT_TIERS["low"].fallback),
+                primary=read_user_pref("model_low", DEFAULT_TIER_MODELS["low"]),
+                fallback=build_fallback("low", read_user_pref("model_low", DEFAULT_TIER_MODELS["low"])),
                 description=DEFAULT_TIERS["low"].description,
                 tier_label="low",
             ),
             "medium": TierInfo(
-                primary=settings.TIER_MODEL_MEDIUM or DEFAULT_TIERS["medium"].primary,
-                fallback=parse_fb(settings.TIER_FALLBACK_MEDIUM, DEFAULT_TIERS["medium"].fallback),
+                primary=read_user_pref("model_medium", DEFAULT_TIER_MODELS["medium"]),
+                fallback=build_fallback("medium", read_user_pref("model_medium", DEFAULT_TIER_MODELS["medium"])),
                 description=DEFAULT_TIERS["medium"].description,
                 tier_label="medium",
             ),
             "high": TierInfo(
-                primary=settings.TIER_MODEL_HIGH or DEFAULT_TIERS["high"].primary,
-                fallback=parse_fb(settings.TIER_FALLBACK_HIGH, DEFAULT_TIERS["high"].fallback),
+                primary=read_user_pref("model_high", DEFAULT_TIER_MODELS["high"]),
+                fallback=build_fallback("high", read_user_pref("model_high", DEFAULT_TIER_MODELS["high"])),
                 description=DEFAULT_TIERS["high"].description,
                 tier_label="high",
             ),

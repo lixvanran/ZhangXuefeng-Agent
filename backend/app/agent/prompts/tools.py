@@ -214,4 +214,66 @@ TOOLS = [
             },
         },
     },
+    # ===== v0.9.1 错题本工具 =====
+    {
+        "type": "function",
+        "function": {
+            "name": "wrong_book_scan_uploads",
+            "description": "扫描 workspace/uploads/ 目录, 列出所有待处理文件 (用户从桌面拖进来的错题图片/PDF/Word 等)。当用户说'把上传文件夹里的错题整理一下'或'看看上传文件夹里有什么'时调用。",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "wrong_book_describe_file",
+            "description": "用 Vision 模型识别 uploads/ 里某个图片/PDF/文本文件的内容, 提取错题原文。识别后再用 wrong_book_add_mistake 写入错题本。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "uploads/ 下的文件名, 如 'uploads/photo1.jpg'",
+                    },
+                },
+                "required": ["file_path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "wrong_book_add_mistake",
+            "description": "把识别出的内容写入错题本。自动生成错题编号 (M-001, M-002...) 并加入 RAG 索引, 后续 Agent 可以引用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "错题标题, 简短描述, 如 '圆锥曲线离心率'"},
+                    "content": {"type": "string", "description": "错题内容/题目原文"},
+                    "file_path": {"type": "string", "description": "关联的文件路径 (可选)"},
+                    "subject": {"type": "string", "description": "学科, 如 '数学'/'语文'/'英语'/'物理'/'化学'/'生物'/'历史'/'地理'/'政治'"},
+                    "knowledge_point": {"type": "string", "description": "知识点, 如 '圆锥曲线'/'函数'"},
+                    "error_type": {"type": "string", "description": "错误类型, 如 '计算错误'/'概念不清'/'方法不会'/'审题错误'"},
+                    "notes": {"type": "string", "description": "备注 (可选)"},
+                },
+                "required": ["title", "content"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "wrong_book_query",
+            "description": "查询错题本。按学科/知识点/掌握状态过滤。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "subject": {"type": "string", "description": "按学科过滤, 如 '数学'"},
+                    "knowledge_point": {"type": "string", "description": "按知识点模糊匹配"},
+                    "mastered": {"type": "boolean", "description": "是否已掌握"},
+                    "limit": {"type": "integer", "description": "返回数量, 默认 20"},
+                },
+            },
+        },
+    },
 ]

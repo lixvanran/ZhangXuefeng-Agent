@@ -1,22 +1,22 @@
 import { useState } from 'react'
-import { MessageSquare, FolderOpen, User, Stethoscope } from 'lucide-react'
+import { MessageSquare, FolderOpen, User, Settings } from 'lucide-react'
 import ChatPage from '@/pages/ChatPage'
 import ResourcesPage from '@/pages/ResourcesPage'
 import ProfilePage from '@/pages/ProfilePage'
-import DiagnoseModal from '@/components/DiagnoseModal'
+import SettingsModal from '@/components/SettingsModal'
 
 type PageKey = 'chat' | 'resources' | 'profile'
 
-const navItems: { key: PageKey | 'diagnose'; label: string; icon: any; color: string }[] = [
+const navItems: { key: PageKey | 'settings'; label: string; icon: any; color: string }[] = [
   { key: 'chat', label: '智能对话', icon: MessageSquare, color: 'text-red-500' },
   { key: 'resources', label: '资料库', icon: FolderOpen, color: 'text-blue-500' },
   { key: 'profile', label: '个人中心', icon: User, color: 'text-purple-500' },
-  { key: 'diagnose', label: '系统诊断', icon: Stethoscope, color: 'text-orange-500' },
+  { key: 'settings', label: '系统设置', icon: Settings, color: 'text-orange-500' },
 ]
 
 export default function App() {
-  const [page, setPage] = useState<PageKey | 'diagnose'>('chat')
-  const [diagnoseOpen, setDiagnoseOpen] = useState(false)
+  const [page, setPage] = useState<PageKey | 'settings'>('chat')
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="flex h-screen apple-bg relative">
@@ -37,8 +37,8 @@ export default function App() {
               <button
                 key={item.key}
                 onClick={() => {
-                  if (item.key === 'diagnose') {
-                    setDiagnoseOpen(true)
+                  if (item.key === 'settings') {
+                    setSettingsOpen(true)
                   } else {
                     setPage(item.key)
                   }
@@ -61,7 +61,7 @@ export default function App() {
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span>服务运行中</span>
           </div>
-          <div className="mt-1.5 text-zinc-400">v0.9.0</div>
+          <div className="mt-1.5 text-zinc-400">v0.9.1</div>
         </div>
       </aside>
 
@@ -71,7 +71,7 @@ export default function App() {
         {page === 'profile' && <ProfilePage />}
       </main>
 
-      {diagnoseOpen && <DiagnoseModal onClose={() => setDiagnoseOpen(false)} />}
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>
   )
 }

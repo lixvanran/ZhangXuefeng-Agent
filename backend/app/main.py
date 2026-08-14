@@ -5,7 +5,12 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.db.database import init_db
-from app.routers import chat, resources, conversations, user, tts
+# v0.9.1: 修复 — 显式 import 所有 ORM 类, 确保 Base.metadata 里有它们
+# (否则 create_all 不会建新表 — 出现 "no such table: user_preferences" 错误)
+from app.db.database import UserPreferenceORM  # noqa: F401
+from app.routers import chat, resources, conversations, user, tts, workspace
+# v0.9.1: 修复 — 别名 import 避免覆盖 app.core.config.settings
+from app.routers import settings as settings_router
 import logging
 import time
 
@@ -222,6 +227,8 @@ app.include_router(resources.router)
 app.include_router(conversations.router)
 app.include_router(user.router)
 app.include_router(tts.router)
+app.include_router(workspace.router)
+app.include_router(settings_router.router)
 
 
 @app.get("/")

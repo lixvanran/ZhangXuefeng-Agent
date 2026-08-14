@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, GraduationCap, MessageCircle, Target, Loader2, Plus, MessageSquare, Trash2, Volume2, Square } from 'lucide-react'
+import { Send, GraduationCap, MessageCircle, Target, Loader2, Plus, MessageSquare, Trash2, Volume2, Square, Paperclip, X, CheckCircle2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { useAppStore } from '@/store/useAppStore'
-import { streamChat, getUserProfile, listConversations, getConversation, createConversation, deleteConversation, getToggle, setToggle, tts, getVoices } from '@/api'
+import { streamChat, getUserProfile, listConversations, getConversation, createConversation, deleteConversation, getToggle, setToggle, tts, getVoices, uploadToWorkspace, listUploads } from '@/api'
 import { demoScripts, demoProfile } from '@/data/demoScript'
 import type { Scenario } from '@/types'
 
@@ -28,8 +28,47 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [webSearchOn, setWebSearchOn] = useState(() => getToggle('web_search'))
   const [deepThinkingOn, setDeepThinkingOn] = useState(() => getToggle('deep_thinking'))
+  // v0.9.1: 上传文件夹状态
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{name: string; path: string; size: number}>>([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // v0.9.1: 加载 uploads/ 文件列表
+  useEffect(() => {
+    listUploads().then((res) => {
+      if (res.success) {
+        setUploadedFiles(res.items.map(i => ({name: i.name, path: i.path, size: i.size})))
+      }
+    }).catch(() => {})
+  }, [])
+
+  // v0.9.1: 上传文件到 workspace/uploads/
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setUploading(true)
+    const ALLOWED = ['image/', 'application/pdf', 'text/', '.doc', '.docx']
+    for (const file of Array.from(files)) {
+      const ok = ALLOWED.some(p => file.type.startsWith(p) || file.name.toLowerCase().endsWith(p))
+      if (!ok) {
+        alert(`不支持: ${file.name}`)
+        continue
+      }
+      try {
+        const res = await uploadToWorkspace(file)
+        if (res.success) {
+          setUploadedFiles(prev => [...prev, {name: res.filename!, path: res.path!, size: res.size!}])
+        } else {
+          alert(`上传失败: ${res.error || '未知错误'}`)
+        }
+      } catch (e: any) {
+        alert(`上传出错: ${e.message}`)
+      }
+    }
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   const toggleWebSearch = () => {
     const next = !webSearchOn
@@ -178,7 +217,7 @@ export default function ChatPage() {
             return { messages: newMsgs }
           })
         } else if (event.type === 'thinking') {
-          // 深度思考流式增量
+          // high 模式思考流式增量
           useAppStore.setState((state) => {
             const newMsgs = [...state.messages]
             if (newMsgs.length > 0) {
@@ -342,7 +381,8 @@ export default function ChatPage() {
               return (
                 <button
                   key={s}
-                  onClick={() => { setScenario(s); handleNewChat() }}
+                  // v0.9.1: 修 bug — 切换场景不自动建新对话, 只换场景, 对话保持
+                  onClick={() => setScenario(s)}
                   className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-black text-white shadow-sm'
@@ -454,7 +494,7 @@ export default function ChatPage() {
               <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full peer-checked:translate-x-4 transition-transform" />
             </div>
             <span className={deepThinkingOn ? 'text-purple-700 font-medium' : 'text-zinc-500'}>
-              深度思考
+              high 模式
             </span>
           </label>
         </div>
@@ -513,7 +553,7 @@ export default function ChatPage() {
                         {msg.reasoning && (
                           <details className="mb-3 bg-purple-50 border border-purple-200 rounded-lg">
                             <summary className="px-3 py-2 cursor-pointer text-sm font-medium text-purple-700 flex items-center gap-2">
-                              <span>深度思考过程</span>
+                              <span>high 模式思考过程</span>
                               <span className="text-xs text-purple-500 ml-auto">点击展开</span>
                             </summary>
                             <div className="px-3 py-2 text-sm text-gray-700 whitespace-pre-wrap border-t border-purple-200">
@@ -646,43 +686,87 @@ export default function ChatPage() {
 
         {/* Input (苹果风) */}
         <div className="p-4 border-t border-black/5 bg-white/60 backdrop-blur-xl">
-          <div className="max-w-3xl mx-auto flex gap-2 items-end">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSend()
-                }
-              }}
-              placeholder={`问小峰老师关于${scenarioConfig[scenario].label}的问题...`}
-              className="apple-input resize-none"
-              rows={2}
-              disabled={isStreaming}
-            />
-            <button
-              onClick={isStreaming ? handleStop : () => handleSend()}
-              disabled={!isStreaming && !input.trim()}
-              className={`apple-btn ${
-                isStreaming
-                  ? 'bg-orange-500 text-white hover:bg-orange-600'
-                  : 'apple-btn-primary disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100'
-              }`}
-              title={isStreaming ? '叫停张老师' : '发送'}
-            >
-              {isStreaming ? (
-                <>
-                  <span className="w-2.5 h-2.5 bg-white rounded-sm" />
-                  <span>叫停中</span>
-                </>
-              ) : (
-                <>
-                  <Send size={16} />
-                  <span>发送</span>
-                </>
-              )}
-            </button>
+          <div className="max-w-3xl mx-auto">
+            {/* v0.9.1: 已上传文件小条 */}
+            {uploadedFiles.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-1.5 text-xs">
+                <span className="text-zinc-500 self-center">待整理 ({uploadedFiles.length}):</span>
+                {uploadedFiles.map((f, i) => (
+                  <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md flex items-center gap-1">
+                    <CheckCircle2 size={11} />
+                    {f.name}
+                    <button
+                      onClick={() => setUploadedFiles(prev => prev.filter((_, j) => j !== i))}
+                      className="ml-0.5 hover:text-blue-900"
+                      title="从列表移除"
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))}
+                <span className="text-zinc-400 self-center">💡 在聊天里说"把上传文件夹里的错题整理一下"</span>
+              </div>
+            )}
+            <div className="flex gap-2 items-end">
+              {/* v0.9.1: 上传按钮 */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.txt,.md"
+                className="hidden"
+                onChange={(e) => handleFileUpload(e.target.files)}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="apple-btn disabled:opacity-30"
+                title="上传错题图片/PDF/Word 到 workspace/uploads/"
+              >
+                {uploading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Paperclip size={16} />
+                )}
+                <span>{uploading ? '上传中' : '上传'}</span>
+              </button>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
+                placeholder={`问小峰老师关于${scenarioConfig[scenario].label}的问题...`}
+                className="apple-input resize-none"
+                rows={2}
+                disabled={isStreaming}
+              />
+              <button
+                onClick={isStreaming ? handleStop : () => handleSend()}
+                disabled={!isStreaming && !input.trim()}
+                className={`apple-btn ${
+                  isStreaming
+                    ? 'bg-orange-500 text-white hover:bg-orange-600'
+                    : 'apple-btn-primary disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100'
+                }`}
+                title={isStreaming ? '叫停张老师' : '发送'}
+              >
+                {isStreaming ? (
+                  <>
+                    <span className="w-2.5 h-2.5 bg-white rounded-sm" />
+                    <span>叫停中</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={16} />
+                    <span>发送</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

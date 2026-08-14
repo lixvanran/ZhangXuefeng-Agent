@@ -22,21 +22,28 @@
 
 ## v0.9.1 升级要点
 
-> **v0.9.1 重构了路由架构 + 加了启动自检和前端诊断页**
+> **v0.9.1 错题本工作流优化 + 切场景不再建新对话 + 系统设置 + 用户可选模型**
 
-- **架构重构**：路由逻辑从 `app/agent/pipeline/complexity.py` + `app/agent/llm/router.py` 合并到新的 `app/agent/routing/` 模块
-  - `classifier.py` — `ComplexityClassifier` Protocol + 3 个实现 (MiniMaxM3 / Heuristic / Ensemble)
-  - `tier_router.py` — `TierRouter` 类，3 档配置 + `classify_and_route()` 一步到位
-  - 未来加新分类器/路由器只需实现接口, 不动 orchestrator
-- **minimaxM3 复杂度分类**：默认用 `minimax/minimax-m3` 评估问题复杂度，失败自动降级到启发式
-- **启动自检**：启动时自动 ping OpenRouter 验证 key，401 立刻在日志里给诊断
-- **前端诊断页**：左侧导航"系统诊断" → 一键检测 key 状态，按步骤给解决方案
-- **三档路由**：闲聊走 Qwen 7B，标准问答走 Sonnet，复杂规划也走 Sonnet（Opus 太贵）
-- **TTS 修复**：之前完全跑不起来，现已接好 MiniMax TTS，配上 `MINIMAX_API_KEY` 就能用；不配也不影响聊天
-- **Embedding 二选一**：无 key → 本地 TF-IDF；配 `OPENAI_API_KEY` → 真语义 embedding
-- **数据库迁移安全化**：之前缺列会 DROP 整张表清空数据，现在 ALTER TABLE 补列
-- **加 .gitignore**：之前的版本没 .gitignore，API key 一推就裸奔
-- **force_tier 调试开关**：默认禁用，避免客户端乱指定模型打爆月费
+- **错题本工作流优化**：
+  - 新增 `workspace/uploads/` 目录 — 把错题图片/PDF/Word 直接拖进去
+  - Chat 页面加 📎 上传按钮（支持多选 + 进度条）
+  - 新增 Agent 工具 `wrong_book_*`（扫描/识别/归类/查询），对话里说"把上传文件夹里的错题整理一下"即可自动入库
+  - 错题本用现有 M-001 编号体系 + RAG 索引（无需重建）
+- **修切场景 bug**：之前点场景会建新对话，现在只有点"新对话"按钮才建
+- **系统诊断 → 系统设置**：3 个 tab — API 状态 / 模型设置 / 消费余额
+- **模型可配置**（前端可选，**严格白名单**）：
+  - 默认: low=minimaxM2.7, mid/high=minimaxM3
+  - low 可选: qwen-2.5-7b / minimaxM2.7 / deepseek-v3.1
+  - mid 可选: minimaxM3 / glm-5 / deepseek-v4-flash
+  - high 可选: minimaxM3 / grok-4.20-multi-agent / glm-5.2 / deepseek-v4-pro
+  - 触发规则: high 档 = 分类=high **且** 开启 "high 模式"（原"深度思考"按钮改名）
+  - 配置存在 `user_preferences` 表，重启生效
+- **余额查询**：调 OpenRouter `/api/v1/auth/key`（不消耗 token），显示邮箱/总额/已用/剩余/进度条
+- **架构**：
+  - `model_whitelist.py` — 严格白名单 + 默认值 + 兜底校验
+  - `tier_router.py` 改从 DB 用户偏好读，env 仅作兜底
+  - `UserPreferenceORM` 新表（key-value）
+  - DiagnoseModal → SettingsModal
 
 ## 改 API Key
 
@@ -54,6 +61,27 @@ OPENAI_API_KEY=xxx
 ```
 
 改完保存，**重启 `启动.bat`** 生效。
+
+## 错题本工作流 (v0.9.1)
+
+1. 把错题图片/PDF/Word/文本**拖到** `workspace/uploads/`（或用 Chat 页面 📎 上传）
+2. 在 Chat 里说 **"把上传文件夹里的错题整理一下"**
+3. Agent 自动扫描 → Vision 识别内容 → 提取学科/知识点/错误类型 → 写入错题本（自动 M-001 编号 + RAG 索引）
+4. 之后问"我错过的圆锥曲线题"会引用到错题本
+
+## 系统设置 (v0.9.1)
+
+左侧导航"系统设置"（原"系统诊断"），3 个 tab：
+- **API 状态** — 检测 OpenRouter key 有效性 + 显示三档模型配置
+- **模型设置** — 选 low/mid/high 档模型（严格白名单）
+- **消费/余额** — OpenRouter 账号余额/已用/剩余 + 进度条
+
+## high 模式 (v0.9.1)
+
+Chat 顶栏开关（原"深度思考"，改名"high 模式"）。开启后：
+- 自动分类为 high 的请求 → 调用 high 档模型
+- 关闭时：所有请求最多到 mid 档
+- 调用规则: high = 分类=high **且** high 模式=开
 
 ## 出问题？
 
@@ -75,16 +103,17 @@ zhangxuefeng-demo/
 │   │   ├── agent/
 │   │   │   ├── routing/           ⭐ 路由模块 (v0.8 新增)
 │   │   │   │   ├── classifier.py   - 复杂度分类器 (MiniMaxM3 + Heuristic + Ensemble)
-│   │   │   │   └── tier_router.py  - 档位路由器
+│   │   │   │   ├── tier_router.py  - 档位路由器 (v0.9.1 读用户偏好)
+│   │   │   │   └── model_whitelist.py  ⭐ v0.9.1 新增 - 严格白名单
 │   │   │   ├── llm/              - LLM 客户端 (base / openrouter / deep_thinking / vision)
 │   │   │   ├── rag/              - RAG 检索
 │   │   │   ├── memory/           - 会话/记忆
 │   │   │   ├── pipeline/          - 消息处理管道
 │   │   │   ├── prompts/           - System prompt 拼装
 │   │   │   ├── search/            - 联网搜索
-│   │   │   ├── tools/             - 工具 (查大学/专业/政策/搜索)
+│   │   │   ├── tools/             - 工具 (含错题本 v0.9.1 新增 wrong_book.py)
 │   │   │   └── orchestrator.py    - 总编排
-│   │   ├── routers/      - API 路由 (chat / resources / conversations / user / tts)
+│   │   ├── routers/      - API 路由 (chat / resources / conversations / user / tts / workspace / settings)
 │   │   ├── services/     - 业务服务
 │   │   └── core/         - 配置 / 模型
 │   ├── knowledge_base/   - 知识库 (11 文件, 200+ 项)
@@ -92,13 +121,17 @@ zhangxuefeng-demo/
 ├── frontend/             - 前端代码 (React + Vite + Tailwind)
 │   └── src/
 │       ├── pages/        - 页面 (Chat / Resources / Profile)
-│       ├── components/   - 组件 (DiagnoseModal - 系统诊断)
-│       ├── api/          - API 客户端
-│       └── store/        - Zustand 状态
+│       ├── components/   - 组件 (SettingsModal - 系统设置 v0.9.1 替代 DiagnoseModal)
+│       ├── api/          - API 客户端 (v0.9.1 +workspace.ts)
+│       └── store/        - Zustand 状态 (v0.9.1 修切场景 bug)
 ├── scripts/              - 声纹克隆辅助脚本 (可选)
 │   ├── clone_zhang_voice.py
 │   ├── download_zhang_audio.py
 │   └── generate_demo_voice.py
+├── workspace/            - Agent 工作目录 (v0.8 新增)
+│   ├── README.md
+│   ├── uploads/          - ⭐ v0.9.1 新增 - 错题上传文件夹
+│   └── ...               - 你的笔记/资料
 └── samples/              - 音频样本位置 (可选)
 ```
 
@@ -117,27 +150,3 @@ zhangxuefeng-demo/
 | zhang_quotes.json | 30 | 张老师经典语录 |
 | zhang_strategy_2026.json | 7 | 2026 备考理念 |
 | gaokao_2026.json | 31 | 31 省 2026 分数线 |
-
-## 演示问题参考
-
-1. **"老师今年湖北一本线？"** — 应答：物理 435 / 历史 443，纠正"582"等错误数据
-2. **"650 分读湖北 AI 怎么报？"** — 应答：武大 654 / 华科 658 / 武汉理工 646 / 湖工大 583-586
-3. **"文科 550 能上 211 吗？"** — 答：建议双非一本/二本好专业优先
-4. **"医学专业怎么样？"** — 答：周期长、家里有资源才考虑
-
-## 常见问题
-
-**Q：跑起来后，AI 回答很慢/很傻？**
-A：默认模型是 Qwen 72B（便宜中文强）。要更聪明，编辑 `.env` 把 `TIER_MODEL_MEDIUM` 和 `TIER_MODEL_HIGH` 改成 `anthropic/claude-3.5-sonnet`（需要 OpenRouter 余额）。
-
-**Q：怎么换 Claude 4 / GPT-4o？**
-A：编辑 `.env` 的 `TIER_MODEL_*`，例如 `TIER_MODEL_HIGH=anthropic/claude-3-opus`。改完重启。
-
-**Q：朗读按钮没反应？**
-A：TTS 需要在 `.env` 配置 `MINIMAX_API_KEY`（https://platform.MiniMax.io 申请）。没配会弹提示框。
-
-**Q：RAG 召回不准？**
-A：当前用本地 TF-IDF（零依赖但语义弱）。在 `.env` 配 `OPENAI_API_KEY` 后重启 → 自动切到 OpenAI Embedding。新增/编辑资料会自动重索引。
-
-**Q：发消息报 401 "User not found" 怎么办？**
-A：key 格式对但 OpenRouter 找不到这个 key 对应的账号。**最简办法**：点左下角 **系统诊断** 按钮，按里面的步骤走（主要是去 https://openrouter.ai/keys 查 key 状态，确认账号邮箱已验证）。

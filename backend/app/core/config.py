@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "ZhangXueFeng Agent"
-    APP_VERSION: str = "0.8.0"
+    APP_VERSION: str = "0.9.1"  # v0.9.1: 错题本 + 系统设置 + 模型可配置
     DEBUG: bool = True
 
     # Server
@@ -139,6 +139,9 @@ class Settings(BaseSettings):
     SQLITE_PATH: Path = DATA_DIR / "sqlite.db"
     # v0.8.0: Agent 工作文件夹 (主目录下), 用户/agent 都能读写
     WORKSPACE_DIR: Path = PROJECT_ROOT / "workspace"
+    # v0.9.1: workspace/uploads/ — 用户把错题图片/PDF/Word 等放在这里
+    # Agent 通过 chat 指令自动扫描 → 识别 → 归类到错题本
+    WORKSPACE_UPLOADS_DIR: Path = WORKSPACE_DIR / "uploads"
 
     # ===== Database =====
     DATABASE_URL: str = f"sqlite:///{SQLITE_PATH}"
@@ -180,6 +183,7 @@ settings = Settings()
 # Ensure directories exist
 settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+settings.WORKSPACE_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 settings.CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 # v0.8.0: 创建工作文件夹 (主目录下)
 settings.WORKSPACE_DIR.mkdir(parents=True, exist_ok=True)
