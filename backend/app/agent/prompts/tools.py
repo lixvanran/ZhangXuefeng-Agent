@@ -167,6 +167,24 @@ TOOLS = [
             },
         },
     },
+    # v0.9.6: 加 read_file 工具 stub — LLM 经常幻觉调 read_file (训练数据里太常见)
+    # 路由到 workspace_read, 兼容 LLM 的"自然"反应
+    {
+        "type": "function",
+        "function": {
+            "name": "read_file",
+            "description": "读 workspace/ 下的文件。**两阶段处理 uploads 错题**: 1) 先调 path='uploads' 列出待处理文件; 2) 再对每个文件调 path='uploads/xxx.jpg', 图片会自动用 Vision 识别错题内容。等效 workspace_read, 是 LLM 容易想到的通用别名。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "相对路径。传 'uploads' 列出待处理文件, 传 'uploads/photo1.jpg' 读取并识别该图片, 传 '笔记/数学.md' 读文本文件"},
+                    "max_chars": {"type": "integer", "description": "最大字符 (默认 50000)"},
+                    "start_line": {"type": "integer", "description": "从第 N 行开始读"},
+                },
+                "required": ["path"],
+            },
+        },
+    },
     {
         "type": "function",
         "function": {
@@ -244,19 +262,19 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "wrong_book_add_mistake",
-            "description": "把识别出的内容写入错题本。自动生成错题编号 (M-001, M-002...) 并加入 RAG 索引, 后续 Agent 可以引用。",
+            "description": "把识别出的内容写入错题本。自动生成错题编号 (M-001, M-002...) 并加入 RAG 索引, 后续 Agent 可以引用。**v0.9.6 重要**: file_path 必传 (来自 wrong_book_describe_file 的返回值, 如 'uploads/photo1.jpg'), 不传则错题本里看不到原图。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "title": {"type": "string", "description": "错题标题, 简短描述, 如 '圆锥曲线离心率'"},
                     "content": {"type": "string", "description": "错题内容/题目原文"},
-                    "file_path": {"type": "string", "description": "关联的文件路径 (可选)"},
+                    "file_path": {"type": "string", "description": "**必传**: 关联的文件路径, 来自 wrong_book_describe_file 的返回值, 如 'uploads/photo1.jpg'"},
                     "subject": {"type": "string", "description": "学科, 如 '数学'/'语文'/'英语'/'物理'/'化学'/'生物'/'历史'/'地理'/'政治'"},
                     "knowledge_point": {"type": "string", "description": "知识点, 如 '圆锥曲线'/'函数'"},
                     "error_type": {"type": "string", "description": "错误类型, 如 '计算错误'/'概念不清'/'方法不会'/'审题错误'"},
                     "notes": {"type": "string", "description": "备注 (可选)"},
                 },
-                "required": ["title", "content"],
+                "required": ["title", "content", "file_path"],
             },
         },
     },

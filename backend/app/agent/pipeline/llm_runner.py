@@ -185,11 +185,34 @@ async def run_llm_with_tools(
         tool_calls_log, tool_messages = await _execute_tool_calls(response["tool_calls"])
         messages.append(_make_assistant_tool_message(response))
         messages.extend(tool_messages)
-        # 二次调用 - 不带 tools, 强制出最终答案
+        # v0.9.6: 二次调用 - **仍然带 tools**, 让 LLM 拿到工具结果后还能继续调
+        # (修复: 之前 tools=[] 导致 LLM 调完 describe_file 后只能用文字回答, 不能调 add_mistake)
         if deep_thinking:
-            final = await deep_thinking_client.chat(messages, tools=[])
+            final = await deep_thinking_client.chat(messages, tools=TOOLS)
         else:
-            final = await _do_chat_with_models(primary, fallback, messages, tools=[])
+            final = await _do_chat_with_models(primary, fallback, messages, tools=TOOLS)
+        # v0.9.6: 如果二次调用又有 tool_calls, 最多再执行 1 轮
+        # (错题工作流: scan → describe → add_mistake, 共 3 步, 给 3 轮工具执行)
+        max_tool_rounds = 3
+        for _ in range(max_tool_rounds - 1):
+            if not final.get("tool_calls"):
+                break
+            extra_log, extra_msgs = await _execute_tool_calls(final["tool_calls"])
+            tool_calls_log.extend(extra_log)
+            messages.append(_make_assistant_tool_message(final))
+            messages.extend(extra_msgs)
+            if deep_thinking:
+                final = await deep_thinking_client.chat(messages, tools=TOOLS)
+            else:
+                final = await _do_chat_with_models(primary, fallback, messages, tools=TOOLS)
+        # 最终不带 tools, 出 markdown 答案
+        if deep_thinking:
+            last = await deep_thinking_client.chat(messages, tools=[])
+        else:
+            last = await _do_chat_with_models(primary, fallback, messages, tools=[])
+        final["content"] = last["content"]
+        if last.get("reasoning") and not final.get("reasoning"):
+            final["reasoning"] = last["reasoning"]
         response["content"] = final["content"]
         if final.get("reasoning") and not response.get("reasoning"):
             response["reasoning"] = final["reasoning"]
@@ -243,17 +266,31 @@ async def run_llm_stream(
         yield ("reasoning", response["reasoning"])
 
     # 2) 如果有 tool_calls, 执行
-    if response.get("tool_calls"):
+    # v0.9.6: 多轮工具循环 — 错题工作流 scan → describe → add_mistake 共 3 步
+    # 之前只支持 1 轮, LLM 调完 describe_file 拿到结果后第二轮 tools=[] 不能调 add_mistake
+    all_tool_logs: List[Dict] = []
+    max_tool_rounds = 3
+    for _round in range(max_tool_rounds):
+        if not response.get("tool_calls"):
+            break
         yield ("tool_call", [
             {"name": tc.function.name, "args": json.loads(tc.function.arguments) if tc.function.arguments else {}}
             for tc in response["tool_calls"]
         ])
         tool_calls_log, tool_messages = await _execute_tool_calls(response["tool_calls"])
+        all_tool_logs.extend(tool_calls_log)
         yield ("tool_result", tool_calls_log)
         messages.append(_make_assistant_tool_message(response))
         messages.extend(tool_messages)
+        # 下一轮: 让 LLM 看到工具结果后能继续调
+        if deep_thinking:
+            response = await deep_thinking_client.chat(messages, tools=TOOLS)
+        else:
+            response = await _do_chat_with_models(primary, fallback, messages, tools=TOOLS)
+        if response.get("reasoning"):
+            yield ("reasoning", response["reasoning"])
 
-    # 3) 流式最终回答
+    # 3) 流式最终回答 (不带 tools, 强制出 markdown 答案)
     full_content = ""
     reasoning_text = response.get("reasoning", "") or ""
     chunk_counter = 0

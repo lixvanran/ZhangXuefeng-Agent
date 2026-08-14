@@ -173,10 +173,19 @@ async def wrong_book_add_mistake(
         # 生成错题编号
         code = generate_code(db, user_id, "mistake")
 
-        # 文件路径: 存绝对路径
+        # v0.9.6: 存相对路径 (前端用 /uploads/xxx 访问)
+        # 之前存绝对路径 (D:\xxx\uploads\xxx) 导致浏览器 404
         stored_file_path = file_path
-        if file_path and not Path(file_path).is_absolute():
-            stored_file_path = str((settings.WORKSPACE_DIR / file_path).resolve())
+        if file_path:
+            # 转成相对路径 (uploads/xxx) 不管传进来的是相对/绝对
+            p = Path(file_path)
+            try:
+                # 如果在 WORKSPACE_DIR 下, 转成相对路径
+                rel = p.resolve().relative_to(settings.WORKSPACE_DIR.resolve())
+                stored_file_path = str(rel).replace("\\", "/")
+            except (ValueError, OSError):
+                # 不在 workspace 下, 保留原样
+                stored_file_path = str(p).replace("\\", "/")
 
         resource = ResourceORM(
             user_id=user_id,

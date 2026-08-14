@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "ZhangXueFeng Agent"
-    APP_VERSION: str = "0.9.2"  # v0.9.2: 错题本 + 系统设置 + 模型可配置
+    APP_VERSION: str = "0.9.7"  # v0.9.7: 多轮工具循环 + 错题本图片修复 + read_file 工具 stub
     DEBUG: bool = True
 
     # Server
@@ -90,13 +90,12 @@ class Settings(BaseSettings):
     CLASSIFY_MODEL: str = "minimax/minimax-m3"
 
     # ===== Vision Model (for image description) =====
-    # v0.8.0: 换成你 key 能调的多模态模型
-    #   openai/gpt-4o-mini (v0.7.5 默认) 你 key 调不通 (OpenAI region 限制)
-    # 实测能调: z-ai/glm-4.5v (国产便宜中文强), qwen2.5-vl-72b, llama-4-scout, gemini-2.5-flash
+    # v0.9.5: 修 vision fallback — 删掉 minimax/minimax-01 (该模型在 OpenRouter 上不存在, 会返回乱码)
+    # 实测能调的多模态: z-ai/glm-4.5v (国产便宜中文强) + fallback qwen2.5-vl-72b / llama-4-scout / gemini-2.5-flash
     VISION_MODEL: str = "z-ai/glm-4.5v"
     VISION_BASE_URL: str = ""  # if empty, use LLM_BASE_URL
     VISION_API_KEY: str = ""  # if empty, use LLM_API_KEY
-    VISION_FALLBACK_MODELS: str = "qwen/qwen2.5-vl-72b-instruct,meta-llama/llama-4-scout,google/gemini-2.5-flash,minimax/minimax-01"
+    VISION_FALLBACK_MODELS: str = "qwen/qwen2.5-vl-72b-instruct,meta-llama/llama-4-scout,google/gemini-2.5-flash"
 
     # ===== Embedding =====
     # If OPENAI_API_KEY is set, use OpenAI; otherwise use local sentence-transformers

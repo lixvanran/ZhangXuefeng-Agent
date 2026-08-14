@@ -45,6 +45,9 @@ TOOL_REGISTRY: Dict[str, Callable[..., Awaitable[Dict]]] = {
     # ===== workspace 文件夹操作 =====
     "workspace_list": workspace_list,
     "workspace_read": workspace_read,
+    # v0.9.6: read_file 工具 stub — LLM 幻觉调 read_file 时也能工作
+    # 等效 workspace_read, 但对 uploads/ 下的图片会走 Vision 识别
+    "read_file": workspace_read,
     "workspace_write": workspace_write,
     "workspace_search": workspace_search,
     "workspace_delete": workspace_delete,

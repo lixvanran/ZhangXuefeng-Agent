@@ -16,13 +16,30 @@ router = APIRouter(prefix="/api/resources", tags=["资料库"])
 
 
 def _serialize(r: ResourceORM) -> dict:
+    # v0.9.6: file_path 转成 web URL
+    # 后端可能存的是绝对路径 (老数据) 或相对路径 (新数据), 统一转成 /uploads/xxx
+    file_url = None
+    if r.file_path:
+        from pathlib import Path as _P
+        p = _P(r.file_path)
+        # 取 basename, 加 /uploads/ 前缀
+        if p.is_absolute():
+            # 绝对路径: 提取 basename
+            file_url = f"/uploads/{p.name}"
+        else:
+            # 相对路径: uploads/xxx.png → /uploads/xxx.png
+            # 已经是 /uploads/xxx 形式则直接用
+            if r.file_path.startswith("/uploads/"):
+                file_url = r.file_path
+            else:
+                file_url = f"/uploads/{_P(r.file_path).name}"
     return {
         "id": r.id,
         "code": r.code,
         "type": r.type,
         "title": r.title,
         "content": r.content,
-        "file_path": r.file_path,
+        "file_path": file_url or r.file_path,  # 优先用 web URL, 兜底用原值
         "subject": r.subject,
         "tags": r.tags or [],
         "knowledge_point": r.knowledge_point,

@@ -89,22 +89,77 @@ async def workspace_list(path: str = ".", pattern: str = "*") -> Dict:
 
 async def workspace_read(path: str, max_chars: int = 50000, start_line: int = 0) -> Dict:
     """读 workspace/ 下的文件
+
+    v0.9.6: 增强 — 如果是 uploads/ 下的图片, 自动用 Vision 识别
+    (避免 LLM 调 read_file 拿到"不是文本文件"错误)
+
     Args:
         path: 相对路径
         max_chars: 最大字符数 (默认 50000, 防止 LLM 拿到超大文件)
         start_line: 从第几行开始读 (默认 0)
     Returns:
-        {"success": True, "path": ..., "content": ..., "truncated": bool, "total_lines": N, "size": N}
+        {"success": True, "path": ..., "content": ..., ...}
+        或图片: {"success": True, "path": ..., "content": <Vision 描述>, "type": "image_vision"}
     """
     try:
         p = _safe_resolve(path)
         if p is None:
             return {"success": False, "error": f"非法路径: {path}"}
+
+        # v0.9.6: 智能处理 — 传 "uploads" 或 "uploads/" 或空 → 列出 uploads 目录
+        if p.is_dir() and ("uploads" in str(p).replace("\\", "/").lower().split("/")[-2:]):
+            # 是 uploads 目录
+            items = []
+            for f in sorted(p.iterdir()):
+                if f.name.startswith("."):
+                    continue
+                stat = f.stat()
+                items.append({
+                    "name": f.name,
+                    "path": f"uploads/{f.name}",
+                    "size": stat.st_size,
+                    "is_file": f.is_file(),
+                })
+            return {
+                "success": True,
+                "path": str(path),
+                "absolute_path": str(p),
+                "type": "directory_listing",
+                "items": items,
+                "total": len(items),
+                "message": f"uploads/ 目录里有 {len(items)} 个待处理文件, 用 file_path='uploads/xxx' 读取具体文件",
+            }
+
         if not p.exists():
             return {"success": False, "error": f"文件不存在: {path}"}
         if not p.is_file():
             return {"success": False, "error": f"不是文件: {path}"}
-        # 二进制直接拒绝
+
+        # v0.9.6: 增强 — uploads/ 下的图片走 Vision 识别
+        ext = p.suffix.lower()
+        if str(p).startswith(str(settings.WORKSPACE_UPLOADS_DIR.resolve())) and ext in {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"
+        }:
+            try:
+                from app.agent.llm.vision import vision_client
+                ok, desc, model = await vision_client.describe(str(p))
+                if ok:
+                    return {
+                        "success": True,
+                        "path": str(path),
+                        "absolute_path": str(p),
+                        "content": desc,
+                        "type": "image_vision",
+                        "model_used": model,
+                        "size": p.stat().st_size,
+                    }
+                else:
+                    return {"success": False, "error": f"Vision 识别失败: {desc}"}
+            except Exception as e:
+                logger.error(f"workspace_read vision error: {e}")
+                return {"success": False, "error": f"Vision 失败: {e}"}
+
+        # 文本类文件直接读
         try:
             content = p.read_text(encoding="utf-8")
         except UnicodeDecodeError:

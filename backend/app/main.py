@@ -58,10 +58,8 @@ async def lifespan(app: FastAPI):
     # 不通过也不报错, 只在日志里告警
     await self_check_openrouter()
 
-    # v0.8.0: 启动时检测 high 档的 Claude Opus 5 / Anthropic 系列在你的 key 下是否可用
-    # 实测 2026-07-28: 一些 OpenRouter key 被 Anthropic 区域限制, 调 Claude 会 403
-    # 不阻断启动, 只在日志里告警
-    await self_check_anthropic_access()
+    # v0.9.5: 删 self_check_anthropic_access (启动时不再主动 ping 模型, 避免 OpenRouter 开销)
+    # 如果要看模型能不能调, 点 API 状态页的"重新检测"按钮
 
     yield
     logger.info("Shutting down...")
@@ -111,99 +109,10 @@ async def self_check_openrouter():
         logger.warning(f"⚠ OpenRouter self-check failed: {e}")
 
 
-async def self_check_anthropic_access():
-    """v0.8.0: 启动时检测 high 档 primary 在你的 key 下能不能调
-    - 200 → ✓ high 档 primary 可用
-    - 403 "not available in your region" → ✗ 你的 key 被地区限制, 会降级
-    - 402 → 余额不足
-    - 只在 high 档是 anthropic 系列时才测试 Claude, 其他系列 (Llama 4 Maverick, GPT 等) 跳过
-    """
-    if not settings.LLM_API_KEY:
-        return
-    primary = (settings.TIER_MODEL_HIGH or "").lower()
-    if "anthropic" not in primary:
-        # high 档不是 Claude, 不需要这种探测
-        # (用户 2026-07-28: high 档换了, 不是 Claude 了)
-        if any(k in primary for k in ["openai/", "google/", "gpt", "gemini"]):
-            # 探测 GPT/Gemini — 顺便告诉用户
-            await _probe_high_tier_access(settings.TIER_MODEL_HIGH, "high 档 (OpenAI/Google)")
-        return
-    # 以下是 anthropic 的检测逻辑 (保留代码但不当前不执行)
-    try:
-        import httpx
-        # 用 cheapest 的 haiku 测一下, 不浪费 token
-        r = await httpx.AsyncClient().post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.LLM_API_KEY}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": settings.OPENROUTER_REFERER,
-                "X-Title": settings.OPENROUTER_TITLE,
-            },
-            json={
-                "model": "anthropic/claude-3-haiku-20240307",
-                "messages": [{"role": "user", "content": "ping"}],
-                "max_tokens": 5,
-            },
-            timeout=15,
-        )
-        if r.status_code == 200:
-            logger.info("✓ Anthropic Claude 可用, high 档会优先走 Opus 5")
-        elif r.status_code == 403:
-            err = r.json().get("error", {}).get("message", "")
-            if "region" in err.lower() or "not available" in err.lower():
-                logger.warning(
-                    f"⚠ Anthropic Claude 在你的 key 下不可用 (403 region 限制)\n"
-                    f"  high 档 primary={settings.TIER_MODEL_HIGH} 会调不通, 自动降级到 fallback 链\n"
-                    f"  解决选项:\n"
-                    f"    1) 换可调 Claude 的 key (绕开地区限制)\n"
-                    f"    2) 把 high 档 primary 改成能调的模型 (z-ai/glm-5.2, minimax/minimax-m2.7 等)\n"
-                    f"    3) 不改, 让 fallback 顶上去 (当前默认行为, 已配好 z-ai/glm-5.2 在第一顺位)"
-                )
-            else:
-                logger.warning(f"⚠ Anthropic Claude 403: {err[:200]}")
-        elif r.status_code == 402:
-            logger.warning("⚠ Anthropic Claude 402: 余额不足, high 档会降级")
-        else:
-            logger.warning(f"⚠ Anthropic Claude 探测异常: HTTP {r.status_code}: {r.text[:200]}")
-    except Exception as e:
-        logger.warning(f"⚠ Anthropic Claude 探测失败: {e}")
-
-
-async def _probe_high_tier_access(model: str, label: str):
-    """v0.8.0: 探测 high 档 primary 是否可用
-    - 200 → ✓
-    - 403 region → ✗ 会降级
-    - 402 → 余额不足
-    """
-    if not settings.LLM_API_KEY:
-        return
-    try:
-        import httpx
-        r = await httpx.AsyncClient().post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.LLM_API_KEY}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": settings.OPENROUTER_REFERER,
-                "X-Title": settings.OPENROUTER_TITLE,
-            },
-            json={"model": model, "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5},
-            timeout=15,
-        )
-        if r.status_code == 200:
-            logger.info(f"✓ {label} ({model}) 可用, high 档会优先走它")
-        elif r.status_code == 403 and ("region" in r.text.lower() or "not available" in r.text.lower()):
-            logger.warning(
-                f"⚠ {label} ({model}) 调不通 (403 region)\n"
-                f"  high 档会自动降级到 fallback 链"
-            )
-        elif r.status_code == 402:
-            logger.warning(f"⚠ {label} ({model}) 402 余额不足")
-        else:
-            logger.warning(f"⚠ {label} ({model}) HTTP {r.status_code}: {r.text[:200]}")
-    except Exception as e:
-        logger.warning(f"⚠ {label} ({model}) 探测失败: {e}")
+# v0.9.5: 删 self_check_anthropic_access 和 _probe_high_tier_access
+# 这两个函数启动时多调一次 OpenRouter chat/completions (消耗 token)
+# 而且你 OpenRouter 上看到的 "other" 模型和开销爆表, 大概率就是这些
+# 改: 不再启动时主动 ping, 用户想测可点 API 状态页的"重新检测"
 
 
 app = FastAPI(
@@ -220,7 +129,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/uploads", StaticFiles(directory=str(settings.UPLOAD_DIR)), name="uploads")
+# v0.9.6: 把 /uploads 挂到 workspace/uploads/ — 错题本实际存放位置
+# 之前挂到 backend/data/uploads/ 是错的, 用户上传的图片不在那
+app.mount("/uploads", StaticFiles(directory=str(settings.WORKSPACE_UPLOADS_DIR)), name="uploads")
+# 老路径兼容: backend/data/uploads/ 里可能还有老用户的数据
+app.mount("/legacy-uploads", StaticFiles(directory=str(settings.UPLOAD_DIR)), name="legacy_uploads")
 
 app.include_router(chat.router)
 app.include_router(resources.router)
@@ -353,18 +266,22 @@ async def diagnose():
 
     # v0.8.0: 3 档全量 ping - 在 API Key 下分别验证 low/mid/high 的 primary + fallback
     # 让诊断页能看到每个模型到底能不能调, 不只凭 "key 有误" 推断
+    # v0.9.5: 修 — 之前读 settings.TIER_MODEL_* (.env), 不读 DB
+    # 用户在前端"系统设置"改了, 这里仍显示 .env 旧值
+    from app.agent.routing.tier_router import TierRouter
+    current_routing = TierRouter.get_current_routing()
     result["tier_routing"] = {
         "low": {
-            "primary": settings.TIER_MODEL_LOW,
-            "fallback": [m.strip() for m in (settings.TIER_FALLBACK_LOW or "").split(",") if m.strip()],
+            "primary": current_routing["low"].primary,
+            "fallback": current_routing["low"].fallback,
         },
         "medium": {
-            "primary": settings.TIER_MODEL_MEDIUM,
-            "fallback": [m.strip() for m in (settings.TIER_FALLBACK_MEDIUM or "").split(",") if m.strip()],
+            "primary": current_routing["medium"].primary,
+            "fallback": current_routing["medium"].fallback,
         },
         "high": {
-            "primary": settings.TIER_MODEL_HIGH,
-            "fallback": [m.strip() for m in (settings.TIER_FALLBACK_HIGH or "").split(",") if m.strip()],
+            "primary": current_routing["high"].primary,
+            "fallback": current_routing["high"].fallback,
         },
     }
     # high 档触发条件 (v0.8.0 用户 2026-07-28 规则)
@@ -374,128 +291,20 @@ async def diagnose():
         " 举例: 开深度思考 + 问高考志愿方案 = high, 开深度思考 + 问「你好」= mid (任务不够 complex)"
     )
 
-    # 并行 ping 所有 tier 的 primary + fallback (节省总时间)
-    import asyncio
-    if settings.LLM_API_KEY:
-        async def ping(model: str) -> dict:
-            """ping 单个模型, 返回 {ok, status_code, latency_ms, tokens, model_returned, error}"""
-            import time
-            t0 = time.time()
-            try:
-                cr = await httpx.AsyncClient().post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {settings.LLM_API_KEY}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": settings.OPENROUTER_REFERER,
-                        "X-Title": settings.OPENROUTER_TITLE,
-                    },
-                    json={
-                        "model": model,
-                        "messages": [{"role": "user", "content": "ping"}],
-                        "max_tokens": 3,
-                    },
-                    timeout=10,
-                )
-                latency = int((time.time() - t0) * 1000)
-                if cr.status_code == 200:
-                    data = cr.json()
-                    usage = data.get("usage", {})
-                    return {
-                        "ok": True,
-                        "status_code": 200,
-                        "latency_ms": latency,
-                        "model_returned": data.get("model", model),
-                        "tokens": usage.get("total_tokens", 0),
-                        "cost": usage.get("cost", 0),
-                    }
-                else:
-                    body = cr.text[:150]
-                    return {
-                        "ok": False,
-                        "status_code": cr.status_code,
-                        "latency_ms": latency,
-                        "error": body,
-                        "error_type": "region" if cr.status_code == 403 and "region" in body.lower() else
-                                      "payment" if cr.status_code == 402 else
-                                      "not_found" if cr.status_code == 404 else
-                                      "unknown",
-                    }
-            except httpx.ConnectError as e:
-                return {"ok": False, "error": f"网络不通: {str(e)[:80]}", "error_type": "network", "latency_ms": int((time.time() - t0) * 1000)}
-            except Exception as e:
-                return {"ok": False, "error": str(e)[:80], "error_type": "unknown", "latency_ms": int((time.time() - t0) * 1000)}
+    # v0.9.5: 修高开销 bug — 之前 diagnose 每次打开都并行 ping 6 个模型 (3 档 × primary + fallback)
+    # 每个 ping 调 OpenRouter chat/completions (虽然 max_tokens=3 很小, 但 6 次 = 6 次 overhead)
+    # 用户 OpenRouter 上看到 "other" 模型 + 开销爆表, 大概率就是这些 ping 累积
+    # 现在改成: 只展示配置, 不自动 ping. 如果要看模型能不能调, 用户点重新检测按钮再 ping
+    result["api_call_status"] = {
+        "note": "v0.9.5: 改成不自动 ping (避免 OpenRouter 开销), 想测可点 API 状态页的重新检测按钮",
+        "models": {},
+        "summary": {"total": 0, "ok": 0, "failed": 0},
+    }
 
-        # 收集所有模型 (去重保序)
-        all_models = []
-        seen_models = set()
-        for tier_name in ("low", "medium", "high"):
-            cfg = result["tier_routing"][tier_name]
-            for role in ("primary", "fallback"):
-                m = cfg.get(role, [])
-                if isinstance(m, str):
-                    m = [m]
-                for model in m:
-                    if model and model not in seen_models:
-                        seen_models.add(model)
-                        all_models.append(model)
-        # 并行 ping
-        ping_results = await asyncio.gather(*[ping(m) for m in all_models])
-        result["api_call_status"] = {
-            "pinged_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "models": dict(zip(all_models, ping_results)),
-            "summary": {
-                "total": len(ping_results),
-                "ok": sum(1 for r in ping_results if r.get("ok")),
-                "failed": sum(1 for r in ping_results if not r.get("ok")),
-            },
-        }
-    else:
-        result["api_call_status"] = {"error": "LLM_API_KEY 未设, 跳过 ping"}
-
-    # 探测 high 档 primary (保留旧字段作向后兼容)
-    if settings.TIER_MODEL_HIGH:
-        try:
-            cr = await httpx.AsyncClient().post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {settings.LLM_API_KEY}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": settings.OPENROUTER_REFERER,
-                    "X-Title": settings.OPENROUTER_TITLE,
-                },
-                json={
-                    "model": settings.TIER_MODEL_HIGH,
-                    "messages": [{"role": "user", "content": "ping"}],
-                    "max_tokens": 5,
-                },
-                timeout=15,
-            )
-            if cr.status_code == 200:
-                result["high_tier_access"] = {
-                    "ok": True,
-                    "model": settings.TIER_MODEL_HIGH,
-                    "message": f"✓ high 档 primary ({settings.TIER_MODEL_HIGH}) 可用",
-                }
-            elif cr.status_code == 403 and ("region" in cr.text.lower() or "not available" in cr.text.lower()):
-                result["high_tier_access"] = {
-                    "ok": False,
-                    "model": settings.TIER_MODEL_HIGH,
-                    "error": f"{settings.TIER_MODEL_HIGH} 被地区限制 (403 region)",
-                    "impact": "high 档 primary 调不通, 会降级到 fallback 链",
-                    "actions": [
-                        f"1) 换可调 {settings.TIER_MODEL_HIGH} 的 key",
-                        "2) 或把 .env 的 TIER_MODEL_HIGH 改成你 key 能调的 (z-ai/glm-5.2 / meta-llama/llama-4-maverick / mistralai/mistral-large-2407 等)",
-                        "3) 或不处理, 接受自动降级",
-                    ],
-                }
-            else:
-                result["high_tier_access"] = {
-                    "ok": False, "model": settings.TIER_MODEL_HIGH,
-                    "error_code": cr.status_code, "error": cr.text[:200],
-                }
-        except Exception as ce:
-            result["high_tier_access"] = {"ok": None, "error": f"探测失败: {ce}"}
+    # 探测 high 档 primary (保留旧字段作向后兼容) - v0.9.5: 同样不自动 ping
+    result["high_tier_access"] = {
+        "note": "v0.9.5: 改成不自动 ping, 想测可点重新检测按钮"
+    }
 
     return result
 
