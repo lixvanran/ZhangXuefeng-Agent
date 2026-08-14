@@ -124,7 +124,7 @@ zhangxuefeng-demo/
 │   │   │   ├── pipeline/          - 消息处理管道
 │   │   │   ├── prompts/           - System prompt 拼装
 │   │   │   ├── search/            - 联网搜索
-│   │   │   ├── tools/             - 工具 (含错题本 v0.9.2 新增 wrong_book.py)
+│   │   │   ├── tools/             - 工具 (含错题本 v0.9.1 新增 wrong_book.py)
 │   │   │   └── orchestrator.py    - 总编排
 │   │   ├── routers/      - API 路由 (chat / resources / conversations / user / tts / workspace / settings)
 │   │   ├── services/     - 业务服务
@@ -143,7 +143,7 @@ zhangxuefeng-demo/
 │   └── generate_demo_voice.py
 ├── workspace/            - Agent 工作目录 (v0.8 新增)
 │   ├── README.md
-│   ├── uploads/          - ⭐ v0.9.1 新增 - 错题上传文件夹
+│   ├── uploads/          - ⭐ v0.9.2 新增 - 错题上传文件夹
 │   └── ...               - 你的笔记/资料
 └── samples/              - 音频样本位置 (可选)
 ```
