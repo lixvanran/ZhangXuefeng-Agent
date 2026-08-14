@@ -1,4 +1,4 @@
-# 张雪峰智能体 v0.9.1
+# 张雪峰智能体 v0.9.2
 
 > 敢说真话的 AI 备考与志愿填报助手
 
@@ -19,6 +19,19 @@
 5. 跟张雪峰老师聊天
 
 要停止服务，**双击 `停止.bat`**。
+
+## v0.9.2 升级要点
+
+> **v0.9.2 bugfix 版本 — 修 3 个关键 bug, 让 v0.9.1 功能真正跑起来**
+
+- **后端启动崩溃修复**：
+  - `database.py` 加 `import logging` + `logger = logging.getLogger(__name__)`（之前整个文件没定义 logger，调用就崩）
+  - `main.py` 别名 import `settings as settings_router`，避免覆盖 `app.core.config.settings` Pydantic 实例
+  - `main.py` 显式 `import UserPreferenceORM`，确保 `Base.metadata` 注册后 `create_all` 才建表
+- **`user_preferences` 表兜底创建**：老数据库升级时如果缺这个表，`_migrate_if_needed` 用 SQL `CREATE TABLE` 强建（双保险）
+- **前端 API 路径去重**：`/api/api/...` → `/api/...`（axios `baseURL: '/api'` 已经带前缀了，不要再加）
+- **`.gitignore` 修复**：`uploads/` 误伤 `workspace/uploads/`，删掉这条规则（`backend/data/uploads/` 已精确匹配）
+- **App.tsx / config.py / README** 版本号统一对齐 v0.9.2
 
 ## v0.9.1 升级要点
 
@@ -62,21 +75,21 @@ OPENAI_API_KEY=xxx
 
 改完保存，**重启 `启动.bat`** 生效。
 
-## 错题本工作流 (v0.9.1)
+## 错题本工作流 (v0.9.2)
 
 1. 把错题图片/PDF/Word/文本**拖到** `workspace/uploads/`（或用 Chat 页面 📎 上传）
 2. 在 Chat 里说 **"把上传文件夹里的错题整理一下"**
 3. Agent 自动扫描 → Vision 识别内容 → 提取学科/知识点/错误类型 → 写入错题本（自动 M-001 编号 + RAG 索引）
 4. 之后问"我错过的圆锥曲线题"会引用到错题本
 
-## 系统设置 (v0.9.1)
+## 系统设置 (v0.9.2)
 
 左侧导航"系统设置"（原"系统诊断"），3 个 tab：
 - **API 状态** — 检测 OpenRouter key 有效性 + 显示三档模型配置
 - **模型设置** — 选 low/mid/high 档模型（严格白名单）
 - **消费/余额** — OpenRouter 账号余额/已用/剩余 + 进度条
 
-## high 模式 (v0.9.1)
+## high 模式 (v0.9.2)
 
 Chat 顶栏开关（原"深度思考"，改名"high 模式"）。开启后：
 - 自动分类为 high 的请求 → 调用 high 档模型

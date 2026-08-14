@@ -40,7 +40,7 @@ chroma/
 user_index.json
 
 # ===== 上传 =====
-uploads/
+# v0.9.1 修: 之前 "uploads/" 误伤 workspace/uploads/, 删掉这条, 保留更精确的 backend/data/uploads/
 backend/data/uploads/
 
 # ===== 音频样本 =====

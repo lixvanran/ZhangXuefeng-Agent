@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "ZhangXueFeng Agent"
-    APP_VERSION: str = "0.9.1"  # v0.9.1: 错题本 + 系统设置 + 模型可配置
+    APP_VERSION: str = "0.9.2"  # v0.9.2: 错题本 + 系统设置 + 模型可配置
     DEBUG: bool = True
 
     # Server
