@@ -22,7 +22,7 @@
 
 ## v0.9.2 修复要点
 
-> **v0.9.2 bugfix 版本 — 修 3 个关键 bug, 让 v0.9.1 功能真正跑起来**
+> **v0.9.2 bugfix 版本 — 修 3 个关键 bug, 让 v0.9.2 功能真正跑起来**
 
 - **后端启动崩溃修复**：
   - `database.py` 加 `import logging` + `logger = logging.getLogger(__name__)`（之前整个文件没定义 logger，调用就崩）
