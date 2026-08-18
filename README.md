@@ -1,4 +1,4 @@
-# 张雪峰智能体 v0.9.7
+# 张雪峰智能体 v0.9.8
 
 > 敢说真话的 AI 备考与志愿填报助手
 
@@ -19,6 +19,40 @@
 5. 跟张雪峰老师聊天
 
 要停止服务，**双击 `停止.bat`**。
+
+## v0.9.8 升级要点
+
+> **v0.9.8 — 1 key 跑全部 + KB 集成 2 个开源 repo (124 篇高质量内容)**
+
+- **1 个 key 跑全部**：之前 3 个 key (LLM/MINIMAX/OPENAI) 现在合并成 1 个 `LLM_API_KEY` (走 OpenRouter)
+  - LLM (主对话/路由/Vision) — OpenRouter ✅
+  - Embedding — OpenRouter 调 `openai/text-embedding-3-small` ✅
+  - Deep thinking — 共用 LLM key ✅
+  - TTS — 改**浏览器 Web Speech API**，0 key 0 成本 ✅
+  - 搜索 — DuckDuckGo 兜底 0 key ✅
+  - 用户只需要配 1 个 `LLM_API_KEY` (OpenRouter 的)
+  - 其他 key (MINIMAX_API_KEY / OPENAI_API_KEY / TAVILY_API_KEY) 保留为向后兼容占位
+- **KB 大幅扩充**：集成 2 个 License 明确的公开 KB（**124 篇**高质量内容，**178.8 KB**）
+  - **Eric-Yibo-Shen/zhangxuefeng-skillset** (CC BY 4.0): 8 个核心知识模块
+    - AI 时代专业选择动态校正 (2026-2030 视角)
+    - 专业选择决策框架 (高确定性 vs 高风险)
+    - 志愿填报操作框架 (冲稳保/城市优先级)
+    - 就业路径分析 (五条主路径真实评估)
+    - 院校选择参考框架 (各分数段逻辑)
+    - 备考策略与决策底层逻辑
+    - 大学在校阶段规划
+    - 新高考选科决策 (3+1+2 模式, 物理 vs 历史)
+  - **zouchenzhen/zhangxuefeng-skill-star** (MIT): 6 份深度研究
+    - 著作与系统思考 (5 本书核心)
+    - 深度采访与对谈 (15+ 权威媒体)
+    - 表达风格 DNA (5 个心智模型 + 8 条决策启发式)
+    - 他者视角与批评
+    - 重大决策分析 (11 个关键决策)
+- **新 KB 文件**：`backend/knowledge_base/10_external_kb.json`
+  - RAG 自动发现加载（无需改代码）
+  - 每条带 `source` (哪个 repo) + `license` (CC BY 4.0 / MIT) 元数据
+  - 按 ## 切分, 长段自动切, 共 **124 个 entries**
+  - 覆盖: AI 时代 / 专业 / 志愿 / 就业 / 院校 / 选科 / 学习方法 / 大学规划 / 著作 / 对话 / 表达 / 评价 / 决策
 
 ## v0.9.7 升级要点
 

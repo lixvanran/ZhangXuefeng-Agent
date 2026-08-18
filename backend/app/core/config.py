@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "ZhangXueFeng Agent"
-    APP_VERSION: str = "0.9.7"  # v0.9.7: 多轮工具循环 + 错题本图片修复 + read_file 工具 stub
+    APP_VERSION: str = "0.9.8"  # v0.9.8: 1 key 跑全部 + KB 集成 2 个开源 repo (124 篇内容)
     DEBUG: bool = True
 
     # Server
@@ -45,10 +45,8 @@ class Settings(BaseSettings):
     LLM_MAX_TOKENS: int = 3000  # v0.8.0: 提高到 3000, GLM 5.x 默认带 reasoning, 需要额外 token 空间
 
     # ===== 多 provider 直连 (可选, 默认走 OpenRouter 统一入口) =====
-    # 直连 Claude 用 ANTHROPIC_API_KEY, 直连 GLM 用 GLM_API_KEY
-    # 当前实现里这两个 key 只在 settings 里占位, 没被代码用上
-    # (统一走 OpenRouter, 用户配 ANTHROPIC_API_KEY 反而易混)
-    # 保留字段, 后续若需要直连再启用
+    # v0.9.8: 这些 key 在代码里没被实际使用, 保留为占位 (向后兼容 + 未来扩展)
+    # 当前架构: 1 个 LLM_API_KEY 跑全部 LLM/Embedding/Vision
     GLM_API_KEY: str = ""
     GLM_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
     GLM_MODEL: str = "glm-4-plus"
@@ -60,10 +58,10 @@ class Settings(BaseSettings):
     ANTHROPIC_MODEL_DEFAULT: str = "claude-sonnet-4-20250514"
 
     # ===== Deep Thinking Model =====
-    # 用 DeepSeek R1 (带 reasoning_content 字段), 走 OpenRouter
+    # v0.9.8: 改用 LLM_API_KEY (OpenRouter), 不再需要独立 DEEP_THINKING_API_KEY
     DEEP_THINKING_MODEL: str = "deepseek/deepseek-r1"
     DEEP_THINKING_BASE_URL: str = ""  # if empty, use LLM_BASE_URL
-    DEEP_THINKING_API_KEY: str = ""  # if empty, use LLM_API_KEY
+    DEEP_THINKING_API_KEY: str = ""  # 保留兼容 (已不用, 走 LLM_API_KEY)
     DEEP_THINKING_EFFORT: str = "medium"  # low/medium/max (DeepSeek 风格)
     DEEP_THINKING_FALLBACK_MODELS: str = "deepseek/deepseek-chat,qwen/qwen-2.5-72b-instruct"
 
@@ -90,35 +88,33 @@ class Settings(BaseSettings):
     CLASSIFY_MODEL: str = "minimax/minimax-m3"
 
     # ===== Vision Model (for image description) =====
-    # v0.9.5: 修 vision fallback — 删掉 minimax/minimax-01 (该模型在 OpenRouter 上不存在, 会返回乱码)
+    # v0.9.8: 改用 LLM_API_KEY (OpenRouter), 不再需要独立 VISION_API_KEY
     # 实测能调的多模态: z-ai/glm-4.5v (国产便宜中文强) + fallback qwen2.5-vl-72b / llama-4-scout / gemini-2.5-flash
     VISION_MODEL: str = "z-ai/glm-4.5v"
     VISION_BASE_URL: str = ""  # if empty, use LLM_BASE_URL
-    VISION_API_KEY: str = ""  # if empty, use LLM_API_KEY
+    VISION_API_KEY: str = ""  # 保留兼容 (已不用, 走 LLM_API_KEY)
     VISION_FALLBACK_MODELS: str = "qwen/qwen2.5-vl-72b-instruct,meta-llama/llama-4-scout,google/gemini-2.5-flash"
 
     # ===== Embedding =====
-    # If OPENAI_API_KEY is set, use OpenAI; otherwise use local sentence-transformers
-    OPENAI_API_KEY: str = ""
-    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    # v0.9.8: 改用 LLM_API_KEY 走 OpenRouter (openai/text-embedding-3-small)
+    # 不再需要独立 OPENAI_API_KEY — 1 个 key 跑全部 LLM/Embedding
+    OPENAI_API_KEY: str = ""  # 保留兼容 (已不用, 走 LLM_API_KEY)
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"  # 保留兼容
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"  # 保留兼容
 
     # ===== Web Search =====
     # Tavily is preferred (1000 free/month). If empty, use DuckDuckGo
     TAVILY_API_KEY: str = ""
 
-    # ===== MiniMax TTS (optional, 不配也能用聊天, 只朗读功能用) =====
-    # 注册: https://platform.MiniMax.io → 充值 → 创建 API Key
-    # 不填 → 朗读按钮返回 503 友好提示, 不影响聊天/资料
+    # ===== v0.9.8: MiniMax TTS 已废弃 =====
+    # TTS 改用浏览器 Web Speech API (前端), 不再需要任何 key
+    # 以下字段保留兼容 (向后兼容老 .env), 但代码不再使用
     MINIMAX_API_KEY: str = ""
     MINIMAX_BASE_URL: str = "https://api.minimax.chat/v1"
-    MINIMAX_TTS_MODEL: str = "speech-2.8-turbo"  # 可选 speech-2.8-hd (更高清)
+    MINIMAX_TTS_MODEL: str = "speech-2.8-turbo"
     MINIMAX_VOICE_DEFAULT: str = "male-qn-qingse"
 
-    # ===== v0.7.9.4: Voice Cloning (optional) =====
-    # 如果用 MiniMax clone_voice 克隆了张雪峰声音, 把 voice_id 填这里
-    # 流程: 1) samples/zhangxuefeng.mp3 准备好  2) python scripts/clone_zhang_voice.py
-    #      3) 脚本会自动写到这里
+    # ===== v0.7.9.4: Voice Cloning (废弃) =====
     ZHANG_VOICE_ID: str = ""
 
     # ===== HuggingFace Mirror =====
@@ -152,10 +148,10 @@ class Settings(BaseSettings):
 
     @property
     def embedding_provider(self) -> str:
-        """openai or local"""
-        if self.OPENAI_API_KEY:
-            return "openai"
-        return "local"
+        """v0.9.8: openai (走 LLM_API_KEY OpenRouter) or local TF-IDF"""
+        if self.LLM_API_KEY:
+            return "openai_via_openrouter"
+        return "local_tfidf"
 
     @property
     def search_provider(self) -> str:

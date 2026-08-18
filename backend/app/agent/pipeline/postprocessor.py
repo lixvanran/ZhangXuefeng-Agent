@@ -16,6 +16,8 @@ def sanitize_llm_output(text: str) -> str:
     - ]<]minimax[>[
     - query_college<arg_key>...</arg_key>... 这种 raw function call
     - 单独 <arg_key>/<arg_value> tags
+    - v0.9.8: <invokename="...">Args<parametername="..."><parameter>...</parameter>...
+            (Anthropic 风格幻觉 tool_call, 一些 LLM 训练数据里的格式)
     """
     if not text:
         return text
@@ -27,6 +29,20 @@ def sanitize_llm_output(text: str) -> str:
     # <tool_call>...</tool_call>
     s = _re.sub(r'<\s*/?\s*tool_call\s*>', '', s)
     s = _re.sub(r'<\s*/?\s*invoke\s*>', '', s)
+    # v0.9.8: Anthropic 风格幻觉 — <invokename="xxx">Args<parametername="..."><parameter>{...}</parameter>
+    # 这种格式 LLM 经常误用, 整段去掉
+    s = _re.sub(
+        r'<\s*invokename\s*=\s*"[^"]+"\s*>[\s\S]*?(?=\n\n|\Z)',
+        '',
+        s,
+    )
+    # 单独的 <parameter>/<parametername>/<parameter_value> 等标签
+    s = _re.sub(r'<\s*/?\s*parametername\s*>', '', s)
+    s = _re.sub(r'<\s*/?\s*parameter_value\s*>', '', s)
+    s = _re.sub(r'<\s*/?\s*parameter\s*>', '', s)
+    s = _re.sub(r'>\s*Args\s*<', ' ', s)  # ">Args<" → 空格
+    # raw "Args" 单独出现
+    s = _re.sub(r'\bArgs\b', '', s)
     # ]<minimax>[<query>...</query>]
     s = _re.sub(r'\]\s*<\s*minimax\s*>\s*\[\s*<query>[\s\S]*?</query>\s*\]', '', s)
     # ]<]minimax[>[

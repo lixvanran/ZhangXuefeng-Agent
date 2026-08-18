@@ -11,8 +11,9 @@ from app.agent.tools.admission import (
     calculate_match,            # v0.8.0
     search_policy,              # v0.8.0 升级
     compare_schools,            # v0.8.0
-    search_school,              # v0.9.0 新增 — 接 db/schools.json
+    search_school,              # v0.9.0 新增 — 接 db/schools.json + v0.9.8 接入掌上高考 API
     search_major,               # v0.9.0 新增 — 接 db/majors.json
+    query_school_admission,     # v0.9.8 新增 — 掌上高考 API 查录取位次
 )
 from app.agent.tools.web import search_web, fetch_url
 from app.agent.tools.workspace import (
@@ -37,8 +38,9 @@ TOOL_REGISTRY: Dict[str, Callable[..., Awaitable[Dict]]] = {
     "calculate_admission_probability": calculate_admission_probability,
     "calculate_match": calculate_match,        # 冲稳保推荐 — 接 db/scores.json
     "compare_schools": compare_schools,        # 多院校对比 — 接 db/schools.json
-    "search_school": search_school,            # v0.9.0 新增 — 院校搜索
+    "search_school": search_school,            # v0.9.0 新增 — 院校搜索 (v0.9.8 优先掌上高考 API)
     "search_major": search_major,              # v0.9.0 新增 — 专业搜索
+    "query_school_admission": query_school_admission,  # v0.9.8 新增 — 查录取位次 (掌上高考 API)
     "search_policy": search_policy,            # 政策库
     "search_web": search_web,
     "fetch_url": fetch_url,

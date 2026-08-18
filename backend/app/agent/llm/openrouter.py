@@ -110,22 +110,21 @@ class LLMClient(BaseLLMClient):
 
     async def embedding(self, text: str) -> list[float]:
         """调 OpenAI-compatible embedding 接口
-        - 走 LLM_BASE_URL (即 OpenRouter) + OPENAI_API_KEY
-        - 注意: OpenRouter 暂不支持 embedding, 这条路径需要用户配
-                OPENAI_BASE_URL 直连 OpenAI 才会真用上
+        v0.9.8: 共用 LLM_API_KEY (OpenRouter 支持 openai/text-embedding-3-small)
+        - 走 LLM_BASE_URL (即 OpenRouter) + LLM_API_KEY
         - 失败时返回零向量 (RAG 会自然降级)
         """
-        if not settings.OPENAI_API_KEY:
-            logger.warning("OPENAI_API_KEY not set; embedding returns zero vector")
+        if not settings.LLM_API_KEY:
+            logger.warning("LLM_API_KEY not set; embedding returns zero vector")
             return [0.0] * 1024
         try:
             from openai import AsyncOpenAI
             client = AsyncOpenAI(
-                api_key=settings.OPENAI_API_KEY,
-                base_url=settings.OPENAI_BASE_URL,
+                api_key=settings.LLM_API_KEY,
+                base_url=settings.LLM_BASE_URL,
             )
             response = await client.embeddings.create(
-                model=settings.OPENAI_EMBEDDING_MODEL,
+                model="openai/text-embedding-3-small",
                 input=text,
             )
             return response.data[0].embedding

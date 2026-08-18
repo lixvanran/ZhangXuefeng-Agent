@@ -30,6 +30,8 @@ KB_INDEX_FIELD = {
     # ===== v0.8.0: 借鉴参考项目新增的 2 个 KB =====
     "08_admission_scores": lambda item: f"{item.get('school_name', '')} {item.get('province', '')} {item.get('subject_type', '')} {item.get('batch', '')} {item.get('min_score', '')} {item.get('min_rank', '')} {' '.join(item.get('tags', []) if isinstance(item.get('tags'), list) else [])}",
     "09_policies": lambda item: f"{item.get('name', '')} {item.get('type', '')} {item.get('summary', '')} {' '.join(item.get('key_points', []))} {item.get('scope', '')} {item.get('zxf_comment', '')} {' '.join(item.get('tags', []) if isinstance(item.get('tags'), list) else [])}",
+    # ===== v0.9.8: 集成 2 个开源 KB (CC BY 4.0 + MIT, 124 篇高质量内容) =====
+    "10_external_kb": lambda item: f"{item.get('text', '')} {item.get('context', '')} {' '.join(item.get('tags', []) if isinstance(item.get('tags'), list) else [])}",
 }
 
 
@@ -44,6 +46,7 @@ KB_DISPLAY_FIELD = {
     "07_life_study": lambda item: f"[{item.get('category') or item.get('type', '人生')}] {item.get('title') or item.get('text', '')[:50]}\n{item.get('content') or item.get('text', '')}",
     "08_admission_scores": lambda item: f"录取数据: {item.get('school_name')} {item.get('province')} {item.get('subject_type', '')} {item.get('year')}年\n最低分: {item.get('min_score', '?')} | 平均分: {item.get('avg_score', '?')} | 最高分: {item.get('max_score', '?')} | 最低位次: {item.get('min_rank', '?')}",
     "09_policies": lambda item: f"[{item.get('type', '政策')}] {item.get('name')}\n{item.get('summary', '')}\n要点: {'; '.join(item.get('key_points', [])[:3])}\n张老师点评: {item.get('zxf_comment', '')}",
+    "10_external_kb": lambda item: f"[{item.get('topic', '外部KB')}] {item.get('context', '')[:80]}\n{item.get('text', '')}" + (f"\n[来源: {item.get('source', '?')} / {item.get('license', '?')}]" if item.get('source') else ""),
 }
 
 

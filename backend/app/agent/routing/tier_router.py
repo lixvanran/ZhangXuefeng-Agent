@@ -236,10 +236,12 @@ class TierRouter:
             }
 
         # v0.8.0: 跳闸 — 任何未走 high 的情况, 上限 mid
+        # v0.9.8: 改 — classifier 分 high 时, **仍然用 high tier** (只是不显示 reasoning)
+        # 之前降级 medium 会让好问题用便宜模型, 体验更差
+        # deep_thinking 只是 "额外显示 thinking" 开关, 不应影响主模型选择
         target_complexity = task_complexity
         if target_complexity == "high" and not deep_thinking:
-            target_complexity = "medium"
-            reason_suffix = " [high 被降级: 深度思考未开]"
+            reason_suffix = " [high 模型; 深度思考未开, 不显示 reasoning]"
         elif deep_thinking and target_complexity in ("low", "medium"):
             reason_suffix = ""
         else:

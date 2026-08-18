@@ -281,39 +281,122 @@ async def search_school(
     school_type: str = "",
     limit: int = 10,
 ) -> Dict:
-    """查院校 (按名字/省/层次) — 接 db/schools.json"""
-    schools = load_db("schools.json")
+    """查院校 (按名字/省/层次)
+
+    v0.9.8: 优先调掌上高考 API (实时数据) → 失败兜底本地 db/schools.json
+    """
     results = []
-    for s in schools:
-        if name and name not in s.get("name", ""):
-            continue
-        if province and s.get("province") != province:
-            continue
-        if is_985 and not s.get("is_985"):
-            continue
-        if is_211 and not s.get("is_211"):
-            continue
-        if school_type and s.get("school_type") != school_type:
-            continue
-        results.append({
-            "name": s["name"],
-            "tier": s.get("level", ""),
-            "city": s.get("city"),
-            "province": s.get("province"),
-            "school_type": s.get("school_type"),
-            "ranking": s.get("ranking"),
-            "is_985": s.get("is_985"),
-            "is_211": s.get("is_211"),
-            "is_double_first_class": s.get("is_double_first_class"),
-        })
+    api_source = None
+
+    # v0.9.8: 优先用掌上高考 API 实时查询
+    if name and len(name) >= 2:
+        try:
+            from app.services.external.gaokao_client import search_schools_by_name
+            api_results = await search_schools_by_name(name, limit=limit)
+            for s in api_results:
+                # 过滤
+                if province and s.get("province") != province:
+                    continue
+                if is_985 and not s.get("f985"):
+                    continue
+                if is_211 and not s.get("f211"):
+                    continue
+                results.append({
+                    "name": s["name"],
+                    "tier": s.get("dual_class_name") or s.get("level", ""),
+                    "city": s.get("city"),
+                    "province": s.get("province"),
+                    "school_type": s.get("type"),
+                    "ranking": s.get("rank"),
+                    "is_985": bool(s.get("f985")),
+                    "is_211": bool(s.get("f211")),
+                    "is_double_first_class": bool(s.get("doublehigh")),
+                    "nature": s.get("nature", ""),
+                    "source": "gaokao_api",
+                })
+            if results:
+                api_source = "gaokao_api"
+        except Exception as e:
+            logger.warning(f"gaokao API search_school failed: {e}, fallback to local db")
+
+    # 兜底: 本地 db/schools.json
+    if not results:
+        schools = load_db("schools.json")
+        for s in schools:
+            if name and name not in s.get("name", ""):
+                continue
+            if province and s.get("province") != province:
+                continue
+            if is_985 and not s.get("is_985"):
+                continue
+            if is_211 and not s.get("is_211"):
+                continue
+            if school_type and s.get("school_type") != school_type:
+                continue
+            results.append({
+                "name": s["name"],
+                "tier": s.get("level", ""),
+                "city": s.get("city"),
+                "province": s.get("province"),
+                "school_type": s.get("school_type"),
+                "ranking": s.get("ranking"),
+                "is_985": s.get("is_985"),
+                "is_211": s.get("is_211"),
+                "is_double_first_class": s.get("is_double_first_class"),
+                "source": "local_db",
+            })
+        api_source = "local_db"
+
     # 排序: 985 > 211 > 双一流 > 普通
     def sort_key(s):
         return (
-            0 if s["is_985"] else (1 if s["is_211"] else (2 if s["is_double_first_class"] else 3)),
+            0 if s.get("is_985") else (1 if s.get("is_211") else (2 if s.get("is_double_first_class") else 3)),
             s.get("ranking") or 9999,
         )
     results.sort(key=sort_key)
-    return {"total": len(results), "results": results[:limit]}
+    return {"total": len(results), "results": results[:limit], "source": api_source}
+
+
+# =================================================================
+# v0.9.8 新增: query_school_admission - 查具体院校在指定省的录取位次
+# 数据源: 掌上高考 API (实时)
+# =================================================================
+
+async def query_school_admission(
+    school_name: str,
+    province: str = "",
+    years: Optional[List[int]] = None,
+) -> Dict:
+    """查询某院校在某省的历年录取位次 (v0.9.8 新增)
+
+    Args:
+        school_name: 院校全名, 如 '苏州大学' / '山东大学' / '中国科学技术大学'
+        province: 考生所在省份, 如 '山东' / '江苏' (留空则只查学校基本信息)
+        years: 年份列表, 默认 [2024, 2023, 2022]
+
+    Returns:
+        {
+            "school": {name, school_id, province, city, f985, f211, type, ...},
+            "admission_ranks": {
+                "2024": {"min_score": 594, "min_rank": 26574, "batch": "普通类一段", "type": "综合"},
+                "2023": {...},
+                ...
+            },
+            "avg_min_rank": 26981,  # 三年平均位次
+            "source": "gaokao.cn API",
+        }
+    """
+    if not school_name:
+        return {"error": "school_name 必填"}
+    try:
+        from app.services.external.gaokao_client import fetch_school_full_info
+        result = await fetch_school_full_info(school_name, province, years)
+        if not result:
+            return {"error": f"找不到院校: {school_name}"}
+        return result
+    except Exception as e:
+        logger.error(f"query_school_admission error: {e}")
+        return {"error": str(e)}
 
 
 async def search_major(

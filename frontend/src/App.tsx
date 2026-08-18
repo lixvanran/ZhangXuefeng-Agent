@@ -61,7 +61,7 @@ export default function App() {
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span>服务运行中</span>
           </div>
-          <div className="mt-1.5 text-zinc-400">v0.9.7</div>
+          <div className="mt-1.5 text-zinc-400">v0.9.8</div>
         </div>
       </aside>
 

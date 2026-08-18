@@ -1,8 +1,10 @@
 """向量化索引
-- 默认 (无 OPENAI_API_KEY): 用纯 Python TF-IDF 假 embedding (512 维, hash + log)
+v0.9.8: 统一用 1 个 LLM_API_KEY (OpenRouter) 跑全部 LLM/Embedding
+- 默认 (无 LLM_API_KEY): 用纯 Python TF-IDF 假 embedding (512 维, hash + log)
   * 优点: 零依赖, 启动即可用
   * 缺点: 语义召回差, 基本是关键词共现
-- 选了 OPENAI_API_KEY: 调 text-embedding-3-small (1536 维, 真正语义)
+- 选了 LLM_API_KEY: 调 OpenRouter 的 openai/text-embedding-3-small (1536 维, 真正语义)
+  * 通过 OpenRouter 一个 key 走通, 不需要单独的 OpenAI key
   * 切换后需要重跑 add_resource 才能重新索引
 """
 import hashlib
@@ -26,15 +28,17 @@ def _hash_dim(text: str, dim: int) -> int:
 
 class EmbeddingService:
     """Embedding 入口 — 启动时根据 settings 选模式
-    - openai: 走 OpenAI 真实 embedding
+    - openai: 走 OpenRouter (openai/text-embedding-3-small)
     - fallback: 纯 Python TF-IDF
     """
 
     def __init__(self):
-        if settings.OPENAI_API_KEY:
+        # v0.9.8: 改用 LLM_API_KEY 走 OpenRouter, 不再依赖 OPENAI_API_KEY
+        if settings.LLM_API_KEY:
             self.mode = "openai"
             self.dim = OPENAI_DIM
-            logger.info(f"Embedding: OpenAI ({settings.OPENAI_EMBEDDING_MODEL}, dim={self.dim})")
+            self.model = "openai/text-embedding-3-small"
+            logger.info(f"Embedding: OpenRouter ({self.model}, dim={self.dim}) — 共用 LLM_API_KEY")
         else:
             self.mode = "fallback"
             self.dim = TFIDF_DIM
@@ -48,22 +52,22 @@ class EmbeddingService:
     def embed_batch(self, texts: List[str]) -> List[List[float]]:
         return [self.embed(t) for t in texts]
 
-    # ===== OpenAI =====
+    # ===== OpenRouter (OpenAI-compatible embeddings) =====
     def _openai_embed(self, text: str) -> List[float]:
         """同步版, 在 async 上下文里走 to_thread"""
         try:
             from openai import OpenAI
             client = OpenAI(
-                api_key=settings.OPENAI_API_KEY,
-                base_url=settings.OPENAI_BASE_URL,
+                api_key=settings.LLM_API_KEY,  # v0.9.8: 共用 OpenRouter key
+                base_url=settings.LLM_BASE_URL,  # 默认 https://openrouter.ai/api/v1
             )
             resp = client.embeddings.create(
-                model=settings.OPENAI_EMBEDDING_MODEL,
+                model=self.model,
                 input=text,
             )
             return resp.data[0].embedding
         except Exception as e:
-            logger.error(f"OpenAI embedding failed: {e}, falling back to TF-IDF")
+            logger.error(f"OpenRouter embedding failed: {e}, falling back to TF-IDF")
             return self._tfidf_vector(text)
 
     async def aembed(self, text: str) -> List[float]:
@@ -72,16 +76,16 @@ class EmbeddingService:
             try:
                 from openai import AsyncOpenAI
                 client = AsyncOpenAI(
-                    api_key=settings.OPENAI_API_KEY,
-                    base_url=settings.OPENAI_BASE_URL,
+                    api_key=settings.LLM_API_KEY,  # v0.9.8: 共用 OpenRouter key
+                    base_url=settings.LLM_BASE_URL,
                 )
                 resp = await client.embeddings.create(
-                    model=settings.OPENAI_EMBEDDING_MODEL,
+                    model=self.model,
                     input=text,
                 )
                 return resp.data[0].embedding
             except Exception as e:
-                logger.error(f"OpenAI embedding failed: {e}, falling back to TF-IDF")
+                logger.error(f"OpenRouter embedding failed: {e}, falling back to TF-IDF")
         return self._tfidf_vector(text)
 
     # ===== Fallback: TF-IDF =====

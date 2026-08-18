@@ -43,11 +43,8 @@ async def lifespan(app: FastAPI):
     # Search provider
     logger.info(f"Search: {settings.search_provider}")
 
-    # TTS
-    if settings.MINIMAX_API_KEY:
-        logger.info(f"TTS: MiniMax ({settings.MINIMAX_TTS_MODEL})")
-    else:
-        logger.info("TTS: disabled (no MINIMAX_API_KEY)")
+    # TTS — v0.9.8: 浏览器 Web Speech API, 0 key 0 成本
+    logger.info("TTS: browser Web Speech API (v0.9.8 改用浏览器原生, 无需 key)")
 
     # Routing
     from app.agent.routing import get_tier_router, get_classifier
@@ -166,7 +163,7 @@ async def health():
         "llm_model": settings.LLM_MODEL,
         "embedding_provider": settings.embedding_provider,
         "search_provider": settings.search_provider,
-        "tts_enabled": bool(settings.MINIMAX_API_KEY),
+        "tts_enabled": True  # v0.9.8: browser web speech always available,
     }
 
 
@@ -185,7 +182,7 @@ async def diagnose():
         "llm_base_url": settings.LLM_BASE_URL,
         "embedding_provider": settings.embedding_provider,
         "search_provider": settings.search_provider,
-        "tts_enabled": bool(settings.MINIMAX_API_KEY),
+        "tts_enabled": True  # v0.9.8: browser web speech always available,
     }
     if not settings.LLM_API_KEY:
         result["llm_test"] = {

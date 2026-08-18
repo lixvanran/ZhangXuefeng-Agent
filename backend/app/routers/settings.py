@@ -180,7 +180,7 @@ async def get_status(db: Session = Depends(get_db)):
         "llm_api_key_prefix": (settings.LLM_API_KEY[:12] + "...") if settings.LLM_API_KEY else None,
         "llm_base_url": settings.LLM_BASE_URL,
         "embedding_provider": getattr(settings, "embedding_provider", "unknown"),
-        "tts_enabled": bool(settings.MINIMAX_API_KEY),
+        "tts_enabled": True,  # v0.9.8: browser web speech always available
         "current_models": {
             "low": _get_pref(db, 1, "model_low", DEFAULT_TIER_MODELS["low"]),
             "medium": _get_pref(db, 1, "model_medium", DEFAULT_TIER_MODELS["medium"]),

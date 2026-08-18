@@ -6,7 +6,7 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { useAppStore } from '@/store/useAppStore'
-import { streamChat, getUserProfile, listConversations, getConversation, createConversation, deleteConversation, getToggle, setToggle, tts, getVoices, uploadToWorkspace, listUploads } from '@/api'
+import { streamChat, getUserProfile, listConversations, getConversation, createConversation, deleteConversation, getToggle, setToggle, uploadToWorkspace, listUploads } from '@/api'
 import { demoScripts, demoProfile } from '@/data/demoScript'
 import type { Scenario } from '@/types'
 
@@ -81,62 +81,63 @@ export default function ChatPage() {
     setToggle('deep_thinking', next)
   }
 
-  // ===== TTS (v0.7.9.4) =====
+  // ===== TTS (v0.9.8: 改用浏览器 Web Speech API, 0 key 0 成本) =====
   const [playingMsgIdx, setPlayingMsgIdx] = useState<number | null>(null)
-  const [ttsLoading, setTtsLoading] = useState<number | null>(null)
   const [ttsError, setTtsError] = useState<number | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [activeVoiceId, setActiveVoiceId] = useState<string>('male-qn-qingse')
-  useEffect(() => {
-    // Load active voice id on mount
-    getVoices().then(v => setActiveVoiceId(v.active_voice_id)).catch(() => {})
-  }, [])
-  const handleSpeak = async (text: string, msgIdx: number) => {
-    if (playingMsgIdx === msgIdx && audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const handleSpeak = (text: string, msgIdx: number) => {
+    // 停止当前播放
+    if (playingMsgIdx === msgIdx && utteranceRef.current) {
+      window.speechSynthesis.cancel()
       setPlayingMsgIdx(null)
       return
     }
+    // 停掉之前任何播放
+    window.speechSynthesis.cancel()
     setTtsError(null)
-    setTtsLoading(msgIdx)
-    try {
-      // Clean text: strip markdown
-      const clean = text
-        .replace(/```[\s\S]*?```/g, '')
-        .replace(/`[^`]+`/g, '')
-        .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
-        .replace(/#+\s/g, '')
-        .replace(/\*\*([^\*]+)\*\*/g, '$1')
-        .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '')
-        .replace(/\|[^\n]+\|/g, '')
-        .replace(/<\|[^|]+\|>/g, '')
-        .trim()
-      if (!clean) { setTtsLoading(null); return }
-      const blob = await tts(clean, undefined, 1.05)
-      const url = URL.createObjectURL(blob)
-      if (audioRef.current) {
-        audioRef.current.pause()
-      }
-      const audio = new Audio(url)
-      audioRef.current = audio
-      audio.onended = () => { setPlayingMsgIdx(null); URL.revokeObjectURL(url) }
-      audio.onerror = () => { setPlayingMsgIdx(null); setTtsError(msgIdx); URL.revokeObjectURL(url) }
-      audio.play()
-      setPlayingMsgIdx(msgIdx)
-    } catch (e: any) {
-      console.error('TTS failed', e)
-      // 503 = TTS 未配置, 弹个明确提示
-      const status = e?.response?.status
-      if (status === 503) {
-        const detail = e?.response?.data?.detail
-        const msg = detail?.message || 'TTS 未配置'
-        alert(`${msg}\n\n如需朗读功能，请到 https://platform.MiniMax.io 申请 key 并填到 .env 的 MINIMAX_API_KEY。`)
-      }
+
+    // 清理 markdown
+    const clean = text
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`[^`]+`/g, '')
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+      .replace(/#+\s/g, '')
+      .replace(/\*\*([^\*]+)\*\*/g, '$1')
+      .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '')
+      .replace(/\|[^\n]+\|/g, '')
+      .replace(/<\|[^|]+\|>/g, '')
+      .trim()
+    if (!clean) return
+
+    // v0.9.8: 浏览器原生 Web Speech API, 0 key 0 成本
+    if (!('speechSynthesis' in window)) {
+      alert('当前浏览器不支持 Web Speech API, 请用 Chrome/Edge/Safari')
       setTtsError(msgIdx)
-    } finally {
-      setTtsLoading(null)
+      return
     }
+    const utter = new SpeechSynthesisUtterance(clean)
+    utter.lang = 'zh-CN'
+    utter.rate = 1.1
+    utter.pitch = 1.0
+    // 优先选中文男声 (更像"老师")
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices()
+      const zhMale =
+        voices.find(v => /zh|chinese/i.test(v.lang) && /male|man|男/i.test(v.name)) ||
+        voices.find(v => /zh|chinese/i.test(v.lang)) ||
+        voices.find(v => v.lang.startsWith('zh'))
+      if (zhMale) utter.voice = zhMale
+    }
+    pickVoice()
+    if (window.speechSynthesis.getVoices().length === 0) {
+      // Chrome 第一次需等 voiceschanged 事件
+      window.speechSynthesis.onvoiceschanged = pickVoice
+    }
+    utter.onend = () => { setPlayingMsgIdx(null); utteranceRef.current = null }
+    utter.onerror = () => { setPlayingMsgIdx(null); setTtsError(msgIdx); utteranceRef.current = null }
+    utteranceRef.current = utter
+    window.speechSynthesis.speak(utter)
+    setPlayingMsgIdx(msgIdx)
   }
 
   useEffect(() => {
@@ -641,11 +642,10 @@ export default function ChatPage() {
                             ))}
                           </div>
                         )}
-                        {/* 朗读 按钮 (v0.7.9.4) */}
+                        {/* 朗读 按钮 (v0.9.8: 浏览器 Web Speech) */}
                         <div className="mt-2 pt-2 border-t border-gray-100 flex items-center gap-2">
                           <button
                             onClick={() => handleSpeak(msg.content, i)}
-                            disabled={ttsLoading === i}
                             className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-md transition ${
                               playingMsgIdx === i
                                 ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
@@ -653,11 +653,9 @@ export default function ChatPage() {
                                 ? 'bg-red-50 text-red-600 hover:bg-red-100'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
-                            title={playingMsgIdx === i ? '点击停止' : '用 AI 模仿张老师的声音朗读'}
+                            title={playingMsgIdx === i ? '点击停止' : '用浏览器 TTS 朗读 (v0.9.8 无需 key)'}
                           >
-                            {ttsLoading === i ? (
-                              <><Loader2 size={12} className="animate-spin" /> 合成中...</>
-                            ) : playingMsgIdx === i ? (
+                            {playingMsgIdx === i ? (
                               <><Square size={12} fill="currentColor" /> 停止</>
                             ) : ttsError === i ? (
                               <><Volume2 size={12} /> 重试</>

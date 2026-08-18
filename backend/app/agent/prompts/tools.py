@@ -101,6 +101,57 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "search_school",
+            "description": "查院校信息（按名字/省份/985/211/类型）。v0.9.8 优先用掌上高考 API 实时数据，本地数据库兜底。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "院校名字（部分匹配）"},
+                    "province": {"type": "string", "description": "所在省份，如 '江苏' / '北京'"},
+                    "is_985": {"type": "boolean", "description": "是否 985"},
+                    "is_211": {"type": "boolean", "description": "是否 211"},
+                    "school_type": {"type": "string", "description": "类型：综合/理工/师范/农林/医药/财经/政法/语言/艺术/民族"},
+                    "limit": {"type": "integer", "description": "返回数量（默认 10）"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "query_school_admission",
+            "description": "查询某院校在某省的历年录取分数+位次。v0.9.8 新增，走掌上高考 API 实时数据（公共免 key）。给志愿填报提供关键数据。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "school_name": {"type": "string", "description": "院校全名，如 '苏州大学' / '山东大学'"},
+                    "province": {"type": "string", "description": "考生所在省份，如 '山东' / '江苏'。留空只查学校基本信息。"},
+                    "years": {"type": "array", "items": {"type": "integer"}, "description": "年份列表，默认 [2024, 2023, 2022]"},
+                },
+                "required": ["school_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_major",
+            "description": "查专业（按名字/学科门类/是否热门）",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "专业名（部分匹配）"},
+                    "category": {"type": "string", "description": "学科门类: 工学/理学/文学/医学/经济学/管理学/法学/教育学/艺术学/农学/历史学/哲学/军事学"},
+                    "sub_category": {"type": "string", "description": "专业类, 如 '计算机类'"},
+                    "is_hot": {"type": "boolean", "description": "是否热门专业"},
+                    "limit": {"type": "integer", "description": "返回数量（默认 10）"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_web",
             "description": "联网深度搜索 — 像豆包/Perplexity 一样: 搜多 provider + 抓全文 + 子问题拆解 + 整合。返回带全文摘录的搜索结果。",
             "parameters": {
