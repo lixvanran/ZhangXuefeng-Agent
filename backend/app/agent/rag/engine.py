@@ -12,6 +12,7 @@ from app.agent.rag.tokenizer import tokenize
 from app.agent.rag.indexer import EmbeddingService
 from app.agent.rag.ranker import cosine, keyword_score
 from app.agent.rag.boost import maybe_apply_boost
+from app.agent.rag.kb_registry import KBRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,24 @@ KB_DISPLAY_FIELD = {
 }
 
 
+# v0.10.0: 原有 10 个库的 schema 打包成 (index_fn, display_fn)。
+# 新增知识库不再需要往上面两个 dict 里加条目 —— 走 KBRegistry 的通用兜底即可;
+# 只有需要特殊展示格式时才在 _load_kb() 里显式覆盖。
+_LEGACY_KB_SCHEMAS = {
+    name: (KB_INDEX_FIELD[name], KB_DISPLAY_FIELD[name])
+    for name in KB_INDEX_FIELD
+    if name in KB_DISPLAY_FIELD
+}
+
+
+def _first_meta(items: list, key: str) -> str:
+    """从条目里取第一个非空的 source/license, 作为整个库的元数据"""
+    for it in items[:20]:
+        if isinstance(it, dict) and it.get(key):
+            return str(it[key])
+    return ""
+
+
 class ZhangRAG:
     """In-memory RAG with persistent JSON storage"""
 
@@ -80,17 +99,47 @@ class ZhangRAG:
         except Exception as e:
             logger.warning(f"Failed to save user index: {e}")
 
-    def _load_kb(self) -> Dict:
-        kb_dir = settings.KNOWLEDGE_BASE_DIR
-        kb = {}
-        # v0.7.8: Auto-discover and load ALL *.json files in knowledge_base/
-        for fp in sorted(kb_dir.glob("*.json")):
+    def _load_kb(self) -> "KBRegistry":
+        """加载知识库
+
+        v0.10.0: 改走 KBRegistry。
+        原实现是 `for fp in kb_dir.glob("*.json"): kb[fp.stem] = json.loads(...)`,
+        加载是自动的, 但 `search_knowledge_base()` 只认 KB_INDEX_FIELD /
+        KB_DISPLAY_FIELD 里登记过的名字, 其余**静默跳过** —— 于是"丢个 json 进去
+        就能搜到"是假的, 新库要改三处代码。
+
+        现在: 目录自动发现 → 注册表登记 → 未声明 schema 的库走通用兜底,
+        全部可检索。原有 10 个库的 index/display 规则原样迁进 _LEGACY_KB_SCHEMAS,
+        行为保持不变。
+        """
+        reg = KBRegistry()
+
+        # 原有 10 个库的专用 schema —— 保持既有检索/展示行为不变
+        for name, (index_fn, display_fn) in _LEGACY_KB_SCHEMAS.items():
+            fp = settings.KNOWLEDGE_BASE_DIR / f"{name}.json"
+            if not fp.exists():
+                continue
             try:
-                kb[fp.stem] = json.loads(fp.read_text(encoding="utf-8"))
-                logger.info(f"Loaded KB: {fp.stem} ({len(kb[fp.stem])} items)")
+                items = json.loads(fp.read_text(encoding="utf-8"))
             except Exception as e:
-                logger.warning(f"Failed to load {fp.name}: {e}")
-        return kb
+                logger.error(f"KB 加载失败 {name}.json: {e}")
+                continue
+            if not isinstance(items, list):
+                logger.error(f"KB 格式错误 {name}.json: 顶层应为 list")
+                continue
+            reg.register(name, items, index_fn=index_fn, display_fn=display_fn,
+                         source=_first_meta(items, "source"), license=_first_meta(items, "license"),
+                         origin="builtin")
+
+        # 再扫一遍目录, 把上面没覆盖到的(即新增的/带 manifest 的)全部注册进来
+        reg.load_directory(settings.KNOWLEDGE_BASE_DIR)
+
+        info = reg.describe()
+        logger.info(
+            f"KB loaded: {info['total_libraries']} libraries, {info['total_items']} items "
+            f"(searchable: {len(info['searchable'])})"
+        )
+        return reg
 
     # ========== 用户资源 CRUD ==========
 
@@ -179,7 +228,12 @@ class ZhangRAG:
             return []
 
     def search_knowledge_base(self, query: str, top_k: int = 5) -> List[Dict]:
-        """搜索知识库 (entity boost + 关键词打分)"""
+        """搜索知识库 (entity boost + 关键词打分)
+
+        v0.10.0: 走 KBRegistry。原来的
+        `if not index_fn or not display_fn: continue` 会让任何没登记过的库
+        静默消失; 现在没声明 schema 的库走通用兜底, 一样能搜到。
+        """
         results: List[Dict] = []
         query_tokens = set(tokenize(query))
 
@@ -187,49 +241,48 @@ class ZhangRAG:
         results.extend(maybe_apply_boost(query, self.knowledge_base))
 
         # Step 2: 关键词打分
-        for kb_name, kb_items in self.knowledge_base.items():
-            if not isinstance(kb_items, list):
+        for kb_name, kbs in self.knowledge_base.items():
+            if not kbs.enabled:
                 continue
-            index_fn = KB_INDEX_FIELD.get(kb_name)
-            display_fn = KB_DISPLAY_FIELD.get(kb_name)
-            if not index_fn or not display_fn:
-                continue
-            for item in kb_items:
+            for item in kbs.items:
                 if not isinstance(item, dict):
                     continue
-                content = index_fn(item)
+                content = kbs.index_of(item)
                 score = keyword_score(query_tokens, content)
                 if score > 0:
-                    title, body = self._format_result(kb_name, item, display_fn)
+                    title, body = self._format_result(kb_name, item, kbs.display_of)
                     results.append({
                         "type": kb_name,
                         "title": title,
                         "content": body,
                         "score": score,
                         "data": item,
+                        # v0.10.0: 合规元数据随结果透出 (CC BY 4.0 / MIT 内容需署名)
+                        "kb_source": kbs.source,
+                        "kb_license": kbs.license,
                     })
 
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:top_k]
 
+    def describe_kb(self) -> Dict:
+        """知识库自省 — 给"为什么搜不到"提供答案(原实现只能翻代码)"""
+        return self.knowledge_base.describe()
+
     def _format_result(self, kb_name: str, item: Dict, display_fn) -> tuple[str, str]:
-        """根据 kb_name 生成 title + body"""
-        if kb_name == "colleges":
-            title = item.get("name", "")
-        elif kb_name == "majors":
-            title = item.get("name", "")
-        elif kb_name == "cities":
-            title = item.get("city", "")
-        elif kb_name == "career":
-            title = f"【{item.get('industry', '')}】{item.get('salary_range', '')}"
-        elif kb_name == "zhang_quotes":
-            title = f"【{item.get('category', '')}】{item.get('quote', '')[:50]}..."
-        elif kb_name == "zhang_strategy_2026":
-            title = f"【{item.get('category', '')}】{item.get('title', '')}"
-        elif kb_name == "gaokao_2026":
-            title = f"{item.get('province', '')} 2026 高考分数线"
+        """生成 title + body
+
+        v0.10.0: 原来这里按库名硬编码了 colleges/majors/cities/career/zhang_quotes/
+        zhang_strategy_2026/gaokao_2026 七个分支, 但这些是 v0.7.x 的库名 ——
+        v0.8.0 重做成 01_/02_... 之后**没有一个还存在**, 全部走 else, 等于死代码。
+        现在标题统一由 KBSource.title_of 推导(优先 name/title), 新库零改动。
+        """
+        kbs = self.knowledge_base.get(kb_name)
+        if kbs is not None:
+            title = kbs.title_of(item)
         else:
-            title = f"[{item.get('category', '知识')}] {item.get('title', '')}"
+            title = (item.get("name") or item.get("title") or item.get("category") or "") if isinstance(item, dict) else ""
+            title = str(title)[:100]
         body = display_fn(item)
         return title, body
 
