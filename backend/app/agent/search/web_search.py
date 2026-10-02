@@ -38,6 +38,57 @@ SEARCH_TIME_BUDGET_SEC = 45.0
 PROVIDER_TIMEOUT_SEC = 15.0
 # 子问题搜索最多用掉剩余预算的这一比例
 SUB_SEARCH_BUDGET_RATIO = 0.4
+# v0.10.0: 相关性阈值。低于此值判定为"低可信"。
+#
+# 背景: 2026-10-02 实测发现, HTML 抓取类源可能"成功返回但内容与查询无关" ——
+# Bing 对多 term 中文查询会退化成只匹配第一个词, 例如
+#   「强基计划 报考条件」→ 返回汉字"强"的字典页面(词覆盖率 0%)
+#   「强基计划」       → 正常返回招生简章(词覆盖率 100%)
+# 这种情况下 provider 报 success、条数也正常, 没有任何报错信号。
+# 若直接把这些当证据喂给 LLM, 结果是"答非所问但附带了看起来很权威的链接" ——
+# 比搜不到更有害。所以这里加一道相关性门控。
+MIN_SEARCH_RELEVANCE = 0.34
+
+_QUERY_SPLIT = re.compile(r'[\s,，、。?？!！;；:：]+')
+
+
+_QUERY_STOPWORDS = {
+    # 疑问代词/副词: 不携带主题信息, 计入分母会无谓拉低覆盖率
+    "怎么", "如何", "什么", "哪些", "哪个", "哪种", "多少", "几个",
+    "怎么样", "是什么", "有没有", "能不能", "可不可以", "为什么", "为啥",
+    # 语气/结构词
+    "的", "了", "吗", "呢", "吧", "啊", "一下", "请问", "帮我", "我想",
+    # 时间副词 (与时效性无关, 由 time_hint 单独处理)
+    "今年", "去年", "最新", "最近", "现在", "目前",
+}
+
+
+def _query_terms(query: str) -> List[str]:
+    """拆出查询里的实义词(去掉过短片段与常见虚词)"""
+    out = []
+    for t in _QUERY_SPLIT.split(query or ""):
+        t = t.strip()
+        if len(t) >= 2 and t not in _QUERY_STOPWORDS:
+            out.append(t)
+    return out
+
+
+def _relevance(query: str, results: List[Dict]) -> float:
+    """结果集对查询的词覆盖率 (0.0 ~ 1.0)
+
+    只看标题 + 摘要前 300 字, 与 _score_result 的打分逻辑刻意保持独立 ——
+    一个是"排谁在前", 这个是"这堆东西到底跟问题有没有关系"。
+    """
+    terms = _query_terms(query)
+    if not terms:
+        return 1.0   # 拆不出实义词, 不做判定
+    if not results:
+        return 0.0
+    blob = " ".join(
+        f"{r.get('title', '')} {r.get('content', '')[:300]}"
+        for r in results
+    )
+    return sum(1 for t in terms if t in blob) / len(terms)
 
 
 # ===== 工具函数 =====
@@ -340,6 +391,8 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
             "fulltext_count": 0,
             "elapsed_sec": elapsed_total,
             "budget_exhausted": budget_exhausted,
+            "relevance": 0.0,
+            "low_relevance": True,
         }
 
     # === 抓全文 (top N, 受剩余预算约束) ===
@@ -367,15 +420,24 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
             r["_full_text"] = url_to_text[url]
 
     elapsed_total = round(time.monotonic() - t_start, 2)
+
+    # v0.10.0 相关性门控: 抓到东西 != 搜到东西。
+    # 源可能"成功返回但内容与查询无关"(见 MIN_SEARCH_RELEVANCE 注释),
+    # 这里量化后交给上层决定是���用还是降级。
+    final = top_results[:max_results]
+    rel = _relevance(query, final)
+    low_relevance = rel < MIN_SEARCH_RELEVANCE
+
     logger.info(
-        f"web_search '{query[:40]}' ok: {len(top_results)} results "
-        f"({fulltext_count} fulltext) in {elapsed_total}s"
+        f"web_search '{query[:40]}' {'LOW-RELEVANCE ' if low_relevance else ''}"
+        f"ok: {len(final)} results ({fulltext_count} fulltext) "
+        f"in {elapsed_total}s relevance={rel:.0%}"
     )
     return {
         "success": True,
         "provider": primary_provider,
         "query": query,
-        "results": top_results[:max_results],
+        "results": final,
         "candidates_tried": [c for c, _ in candidates],
         "time_hint": time_hint,
         "providers_tried": providers_status,
@@ -383,4 +445,6 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
         "fulltext_count": fulltext_count,
         "elapsed_sec": elapsed_total,
         "budget_exhausted": budget_exhausted,
+        "relevance": round(rel, 3),
+        "low_relevance": low_relevance,
     }

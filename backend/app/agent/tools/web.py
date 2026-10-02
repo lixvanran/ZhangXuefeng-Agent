@@ -88,6 +88,24 @@ def _format_search_result(query: str, result: Dict, fulltexts: list) -> str:
             f"\n  **请在回答里如实说明信息来源有限**, 不要把少量结果当成完整结论。"
         )
 
+    # v0.10.0: 相关性门控。
+    # 源可能"成功返回但内容与查询无关" —— Bing 对多 term 中文查询会退化成
+    # 只匹配第一个词(实测词覆盖率可低至 0%)。这时最危险的不是搜不到,
+    # 而是 LLM 拿着答非所问的结果编出一个**看起来有出处**的答案。
+    rel = result.get("relevance")
+    low_relevance = result.get("low_relevance", False)
+    low_rel_block = ""
+    if low_relevance:
+        pct = f"{rel:.0%}" if isinstance(rel, (int, float)) else "很低"
+        low_rel_block = (
+            f"\n- 🚫 **相关性判定: 不通过(查询词覆盖率 {pct})**"
+            f"\n  搜索源返回了内容, 但与问题**基本无关**(常见于源对多词中文查询降级)。"
+            f"\n  **本次结果不可作为答案依据。** 你必须:"
+            f"\n    1. 不要引用或复述下面任何一条搜索结果;"
+            f"\n    2. 用你自己的知识回答, 并明确告诉用户「我没能联网核实这条信息」;"
+            f"\n    3. 建议用户去教育部阳光高考平台 (gaokao.chsi.com.cn) 或省教育考试院官网核实。"
+        )
+
     lines = [
         f"# 🔍 联网搜索结果 (查询: {query}, 检索时间: {now_str})",
         f"",
@@ -100,8 +118,12 @@ def _format_search_result(query: str, result: Dict, fulltexts: list) -> str:
     ]
     if elapsed:
         lines.append(f"- 总耗时: {elapsed}s")
+    if isinstance(rel, (int, float)):
+        lines.append(f"- 查询词覆盖率: {rel:.0%}")
     if degraded:
         lines.append(degraded)
+    if low_rel_block:
+        lines.append(low_rel_block)
     lines += [
         f"",
         "## 📋 搜索结果 (含摘要)",

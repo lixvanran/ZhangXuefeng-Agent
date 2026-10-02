@@ -1,6 +1,7 @@
 """搜索调度层回归测试 — 纯标准库, 不需要 fastapi/httpx/bs4 等三方依赖。
 
-用桩模块把 app.* 依赖替换掉, 直接驱动真实的 web_search 代码路径。
+桩环境见 tests/_search_stubs.py(与 test_search_relevance.py 共享)。
+provider 是可变分发器, 由 set_behavior() 在运行时切换行为。
 
 跑法 (在项目根目录):
     python3 tests/test_search_scheduling.py
@@ -9,110 +10,19 @@ import asyncio
 import os
 import sys
 import time
-import types
 import unittest
 
-# ===== 桩: 把 app.agent.search.web_search 的外部依赖替换掉 =====
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _search_stubs import ws, set_behavior  # noqa: E402  共享桩环境
 
 REPO_BACKEND = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "backend")
 
-
-def _install_stubs():
-    """构造最小 app.* 包骨架, 让 web_search 能被 import"""
-    if "app" in sys.modules:
-        return
-    app = types.ModuleType("app"); app.__path__ = []
-    agent = types.ModuleType("app.agent"); agent.__path__ = []
-    core = types.ModuleType("app.core"); core.__path__ = []
-    search = types.ModuleType("app.agent.search"); search.__path__ = []
-
-    # app.core.config
-    config = types.ModuleType("app.core.config")
-    class _S:
-        WEB_SEARCH_ENABLED = True
-        TAVILY_API_KEY = ""
-    config.settings = _S()
-    core.config = config
-
-    # app.agent.search.query_builder — 无三方依赖, 按文件路径直接加载,
-    # 绕开 app.agent.search.__init__ (它会 import 真 web_search -> dotenv)
-    import importlib.util
-    qb_path = os.path.join(REPO_BACKEND, "app/agent/search/query_builder.py")
-    spec = importlib.util.spec_from_file_location("_real_query_builder", qb_path)
-    qb = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(qb)
-    search.query_builder = qb
-
-    # app.agent.search.url_fetcher — 桩
-    uf = types.ModuleType("app.agent.search.url_fetcher")
-    async def _fake_fetch(url, max_chars=6000):
-        await asyncio.sleep(0.01)
-        return {"success": True, "url": url, "text": "x" * 100}
-    uf.fetch_url = _fake_fetch
-    search.url_fetcher = uf
-
-    # app.agent.search.providers — 桩, 延迟可控
-    prov = types.ModuleType("app.agent.search.providers")
-    for name in ("tavily_search", "bing_html_search", "duckduckgo_search",
-                 "baidu_search", "wikipedia_search", "arxiv_search"):
-        setattr(prov, name, _make_stub_provider(name))
-    search.providers = prov
-
-    for m, mod in [("app", app), ("app.agent", agent), ("app.core", core),
-                   ("app.core.config", config), ("app.agent.search", search),
-                   ("app.agent.search.query_builder", qb),
-                   ("app.agent.search.url_fetcher", uf),
-                   ("app.agent.search.providers", prov)]:
-        sys.modules[m] = mod
-    sys.modules["app"].core = core
-    sys.modules["app.core"].config = config
-    sys.modules["app.agent"].search = search
-    sys.modules["app.agent.search"].query_builder = qb
-    sys.modules["app.agent.search"].url_fetcher = uf
-    sys.modules["app.agent.search"].providers = prov
-
-    # 真代码最后加载 —— 此时 app.* 桩已就位, 其内部 import 才解析得到
-    import importlib.util
-    ws_path = os.path.join(REPO_BACKEND, "app/agent/search/web_search.py")
-    spec2 = importlib.util.spec_from_file_location("_real_web_search", ws_path)
-    ws_mod = importlib.util.module_from_spec(spec2)
-    sys.modules["_real_web_search"] = ws_mod
-    spec2.loader.exec_module(ws_mod)
-    sys.modules["app.agent.search"].web_search = ws_mod
-    sys.modules["app.agent.search"].providers = prov
-    sys.modules["app.agent.search"].web_search = ws_mod
+ALL = ("tavily_search", "bing_html_search", "duckduckgo_search",
+       "baidu_search", "wikipedia_search", "arxiv_search")
 
 
-# 每个 provider 的行为由这些全局开关控制, 测试里改
-PROVIDER_DELAY = 0.5          # 模拟单次网络请求耗时
-PROVIDER_RESULTS = {}         # {provider_name: 是否返回结果}
-CALL_COUNTS = {}              # {provider_name: 被调用次数}
-
-
-def _make_stub_provider(name):
-    async def _fn(query, max_results=10, time_hint=None):
-        CALL_COUNTS[name] = CALL_COUNTS.get(name, 0) + 1
-        await asyncio.sleep(PROVIDER_DELAY)
-        if PROVIDER_RESULTS.get(name, False):
-            return {
-                "success": True, "provider": name, "query": query,
-                "results": [{"title": f"{name}-{query[:10]}", "url": f"https://x.com/{name}/{query[:5]}", "content": "内容"}],
-            }
-        return {"success": False, "provider": name, "query": query, "results": [], "error": "no results"}
-    _fn.__name__ = name
-    return _fn
-
-
-_install_stubs()
-
-ws = sys.modules["_real_web_search"]  # 被测的真实模块
-
-
-def _reset(delay=0.5, providers=None):
-    global PROVIDER_DELAY, PROVIDER_RESULTS
-    PROVIDER_DELAY = delay
-    PROVIDER_RESULTS = providers or {}
-    CALL_COUNTS.clear()
+def _reset(delay=0.5, providers=()):
+    set_behavior(delay=delay, success=providers)
 
 
 class TestProviderContract(unittest.TestCase):
@@ -120,11 +30,11 @@ class TestProviderContract(unittest.TestCase):
 
     def test_all_providers_accept_time_hint(self):
         import inspect
-        for name in ("tavily_search", "bing_html_search", "duckduckgo_search",
-                     "baidu_search", "wikipedia_search", "arxiv_search"):
+        from _search_stubs import PROVIDER_NAMES
+        for name in PROVIDER_NAMES:
             sig = inspect.signature(getattr(sys.modules["app.agent.search.providers"], name))
             with self.subTest(provider=name):
-                sig.bind("测试query", 8, time_hint={"recency": None})  # 不抛 TypeError 即通过
+                sig.bind("测试query", 8, time_hint={"recency": None})
 
     def test_real_tavily_signature_fixed(self):
         """回归测试: 真 tavily_search 曾缺 time_hint, 配了 key 也 100% 静默死亡"""
@@ -141,48 +51,46 @@ class TestProviderContract(unittest.TestCase):
 class TestVariantParallelization(unittest.TestCase):
     """v0.10.0: query 变体从顺序 for 改为并发 gather"""
 
+    def setUp(self):
+        _reset(delay=0.3, providers=("bing_html_search",))
+
     def test_variants_run_concurrently(self):
-        _reset(delay=0.3, providers={n: True for n in
-                                     ("bing_html_search", "duckduckgo_search", "baidu_search",
-                                      "wikipedia_search", "arxiv_search")})
-        # 强制多生成几个 query 变体
         query = "武汉 2026 中考 普高线 一本线 分数线"
         candidates = ws.make_queries(query, 16)
         self.assertGreater(len(candidates), 1, "测试前提: 该 query 应产生多个变体")
 
         t0 = time.monotonic()
         results = asyncio.run(ws._try_provider_for_all_candidates(
-            sys.modules["app.agent.search.providers"].bing_html_search, candidates, 8))
+            sys.modules["app.agent.search.providers"].bing_html_search,
+            candidates, 8))
         elapsed = time.monotonic() - t0
 
         n = len(candidates)
         self.assertGreater(len(results), 0)
         # 并发后应接近单次耗时, 而非 n 倍
-        self.assertLess(elapsed, PROVIDER_DELAY * n * 0.6,
-                        f"变体未并发: {n} 个变体耗时 {elapsed:.2f}s, 单次 {PROVIDER_DELAY}s")
+        self.assertLess(elapsed, 0.3 * n * 0.6,
+                        f"变体未并发: {n} 个变体耗时 {elapsed:.2f}s, 单次 0.3s")
 
 
 class TestTimeBudget(unittest.TestCase):
     """v0.10.0: 整轮搜索有硬时间预算"""
 
     def test_budget_is_enforced(self):
-        _reset(delay=5.0, providers={})  # 全部源都慢且失败
+        _reset(delay=5.0)          # 全部源都慢且失败
         original = ws.SEARCH_TIME_BUDGET_SEC
-        ws.SEARCH_TIME_BUDGET_SEC = 1.0   # 压到 1s 便于断言
+        ws.SEARCH_TIME_BUDGET_SEC = 1.0
         try:
             t0 = time.monotonic()
             res = asyncio.run(ws.web_search("武汉 2026 中考 分数线", max_results=4))
             elapsed = time.monotonic() - t0
             self.assertFalse(res["success"])
-            self.assertIn("providers_tried", res)
             self.assertLess(elapsed, 8.0, f"超出时间预算: 耗时 {elapsed:.2f}s (预算 1s)")
             self.assertIn("elapsed_sec", res)
         finally:
             ws.SEARCH_TIME_BUDGET_SEC = original
 
     def test_provider_timeout_recorded(self):
-        """单个源超时要被记进 providers_tried, 而不是静默消失"""
-        _reset(delay=5.0, providers={})
+        _reset(delay=5.0)
         original_p, original_b = ws.PROVIDER_TIMEOUT_SEC, ws.SEARCH_TIME_BUDGET_SEC
         ws.PROVIDER_TIMEOUT_SEC, ws.SEARCH_TIME_BUDGET_SEC = 0.3, 1.0
         try:
@@ -199,14 +107,14 @@ class TestSubSearchGating(unittest.TestCase):
     """v0.10.0: 子搜索只在'一个源都没成功'时触发, 不再是'少于 3 条'"""
 
     def test_sub_search_skipped_when_results_exist(self):
-        _reset(delay=0.01, providers={n: True for n in ("bing_html_search",)})
+        _reset(delay=0.01, providers=("bing_html_search",))
         res = asyncio.run(ws.web_search("北京大学 计算机 分数线", max_results=5))
-        self.assertTrue(res["success"])
+        self.assertTrue(res["success"], res.get("error"))
         self.assertEqual(res["sub_searches"], [],
                          "已有结果时不应再触发子搜索(旧逻辑: <3 条就触发, 白花 1-2 分钟)")
 
     def test_sub_search_triggers_when_all_fail(self):
-        _reset(delay=0.01, providers={})
+        _reset(delay=0.01)
         res = asyncio.run(ws.web_search("武汉 2026 中考 普高线", max_results=5))
         self.assertFalse(res["success"])
 
@@ -214,12 +122,15 @@ class TestSubSearchGating(unittest.TestCase):
 class TestObservability(unittest.TestCase):
     """v0.10.0: 成功路径也要有可观测信息"""
 
+    def setUp(self):
+        _reset(delay=0.01, providers=("bing_html_search", "baidu_search"))
+
     def test_success_path_exposes_elapsed_and_per_provider(self):
-        _reset(delay=0.01, providers={n: True for n in ("bing_html_search", "baidu_search")})
         res = asyncio.run(ws.web_search("清华大学 计算机", max_results=4))
-        self.assertTrue(res["success"])
+        self.assertTrue(res["success"], res.get("error"))
         self.assertIn("elapsed_sec", res)
-        self.assertGreater(len(res["providers_tried"]), 0)
+        self.assertIn("relevance", res)
+        self.assertIn("low_relevance", res)
         ok = [p for p in res["providers_tried"] if p["ok"]]
         self.assertGreater(len(ok), 0)
         for p in res["providers_tried"]:
