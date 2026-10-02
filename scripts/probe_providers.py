@@ -166,6 +166,37 @@ def _fetch(url, timeout=15):
         return resp.getcode(), resp.read().decode("utf-8", "ignore")
 
 
+# ===== 相关性评估 =====
+
+def _terms(q):
+    return [t for t in re.split(r"[\s,，、]+", q) if len(t) >= 2]
+
+
+def relevance(query, titles):
+    """结果标题覆盖了查询里多少个实义词 —— 衡量"搜到了但没用"的关键指标"""
+    terms = _terms(query)
+    if not terms:
+        return 0.0
+    blob = " ".join(titles)
+    return sum(1 for t in terms if t in blob) / len(terms)
+
+
+def classify(source, res, query):
+    """把探针结果翻译成一句可执行的结论"""
+    if not res.get("reachable"):
+        return "不可达", "该源连不上"
+    if res.get("raw_extracted", 0) == 0:
+        return "失效", "选择器 0 命中(站点改版或被反爬拦截)"
+    if res.get("error") == "ratelimited":
+        return "限流", "返回验证页, 该 IP 被临时封禁(HTML 抓取的固有风险)"
+    if not res.get("after_chinese_filter"):
+        return "失效", "抽到结果但全被中文过滤清空"
+    if res.get("rel", 0) < 0.34:
+        return "低质", (f"关键词覆盖率仅 {res['rel']:.0%} — "
+                       f"疑似只匹配了查询的第一个词, 多 term 查询基本不可用")
+    return "可用", f"关键词覆盖率 {res['rel']:.0%}"
+
+
 # ===== 复刻 bing.py 的抽取逻辑 =====
 
 def probe_bing(query="广东 2025 高考一本线", max_results=10):
@@ -224,9 +255,16 @@ def probe_bing(query="广东 2025 高考一本线", max_results=10):
         if len(results) >= max_results:
             break
 
-    kept = filter_chinese_results = filter_chinese(results)
+    kept = filter_chinese(results)
+    if len(html) < 5000:
+        return {"provider": "bing", "reachable": True, "http": code,
+                "elapsed": elapsed, "selector_hits": {"-": 0},
+                "raw_extracted": 0, "after_chinese_filter": 0,
+                "error": "ratelimited", "rel": 0.0, "titles": []}
     return {
         "provider": "bing", "reachable": code == 200, "http": code,
+        "rel": relevance(query, [r["title"] for r in kept]),
+        "titles": [r["title"] for r in kept],
         "elapsed": elapsed, "selector_hits": selector_stats,
         "raw_extracted": len(results), "after_chinese_filter": len(kept),
         "sample": [{"title": r["title"][:40], "url": r["url"][:60]} for r in kept[:3]],
@@ -277,6 +315,8 @@ def probe_baidu(query="广东 2025 高考一本线", max_results=10):
     kept = filter_chinese(results)
     return {
         "provider": "baidu", "reachable": code == 200, "http": code,
+        "rel": relevance(query, [r["title"] for r in kept]),
+        "titles": [r["title"] for r in kept],
         "elapsed": elapsed, "selector_hits": {"container(div.result,…)": hits},
         "raw_extracted": len(results), "after_chinese_filter": len(kept),
         "sample": [{"title": r["title"][:40], "url": r["url"][:60]} for r in kept[:3]],
@@ -309,6 +349,9 @@ def main():
                 print(f"  选择器 {k:<32} 命中 {v}{'   <-- 0, 该源已失效' if not v else ''}")
             print(f"  原始抽取 {res['raw_extracted']} 条 → "
                   f"中文过滤后 {res['after_chinese_filter']} 条")
+            if res.get("rel") is not None:
+                state, why = classify(res["provider"], res, args.query)
+                print(f"  判定: 【{state}】 {why}")
             for s in res["sample"]:
                 print(f"    · {s['title']}")
                 print(f"      {s['url']}")
