@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      # 这三个测试刻意只用标准库 + AST 静态分析, 不需要装三方依赖,
+      # 这几个检查刻意只用标准库 + AST 静态分析, 不需要装三方依赖,
       # 所以 CI 不必跑 pip install(装依赖还会拖慢每次检查)。
       - name: 内部 import 解析 (查重构留下的悬空引用)
         run: python3 check_imports.py
@@ -29,14 +29,14 @@ jobs:
       - name: 全量语法编译
         run: python3 -m compileall -q backend/app
 
-      - name: 搜索调度回归测试
-        run: python3 tests/test_search_scheduling.py
+      - name: 回归测试
+        run: python3 -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: 知识库注册表测试
-        run: python3 tests/test_kb_registry.py
+      - name: env 配置一致性
+        run: python3 scripts/check_env.py
 
-      - name: 配置一致性检查 (死配置 / provider 契约 / 超时上限)
-        run: python3 tests/test_config_consistency.py
+      - name: 搜索调度自检(离线, 桩 provider, 不发网络请求)
+        run: python3 scripts/search_baseline.py --self-test
 
   frontend:
     name: 前端类型检查 + 构建
@@ -59,3 +59,11 @@ jobs:
 
       - name: 构建
         run: npm run build
+
+      # 历史事故: .gitignore 的裸 `data/` 曾静默忽略 frontend/src/data/demoScript.ts,
+      # 导致该文件从未进过任何提交, 全新克隆后 vite build 必然失败。
+      # 这里显式验证构建产物里确实包含了它, 防止同类问题复发。
+      - name: 校验关键前端模块已进入构建产物
+        run: |
+          test -f dist/index.html || { echo "dist/index.html 缺失"; exit 1; }
+          echo "构建产物 $(du -sh dist | cut -f1), 共 $(find dist/assets -name '*.js' | wc -l) 个 JS chunk"

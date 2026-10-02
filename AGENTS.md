@@ -26,6 +26,8 @@
 | `TIER_CLASSIFY_MODEL` **仍在使用** | 别跟着上面那批一起删 |
 | `model_whitelist.py` 是严格白名单 | 前端设置页写入的模型必须在白名单内,`anthropic/*` 之类会被拒绝 |
 | `scripts/` 下 4 个声音克隆脚本是**预留**状态 | 保留不删、不开发、不接入运行时。详见 `scripts/RESERVED.md` |
+| `.gitignore` 里的裸 `data/` 曾静默忽略 `frontend/src/data/demoScript.ts` | v0.10.0 已收紧为 `/data/`。**加 gitignore 规则时必须用前导 `/` 锚定**, 否则匹配任意层级, 且是静默失败 |
+| `frontend/src/data/demoScript.ts` 是 v0.10.0 **重建**的, 非原版 | 内容是按类型契约写的合理占位。你若有原版直接覆盖, 只需满足文件头注释里的契约 |
 | TTS 已改浏览器 Web Speech API | `synthesize_speech()` 返回 `None` 是**预期行为**,不是 bug |
 
 ---
@@ -114,10 +116,19 @@ result = await execute_tool(name, args)
 ## 7. 提交前必须跑
 
 ```bash
-python3 check_imports.py                          # 80 个内部模块的 import 解析
-python3 -m compileall -q backend/app              # 全量语法
-python3 -m unittest discover -s tests -p "test_*.py"   # 45 个用例
-cd frontend && npx tsc --noEmit && npm run build  # 前端类型 + 构建
+bash scripts/ci.sh            # 一键跑全部 8 项(推荐)
+bash scripts/ci.sh --fast     # 跳过前端
+```
+
+或分步执行:
+
+```bash
+python3 check_imports.py                              # 内部 import 解析
+python3 -m compileall -q backend/app                  # 全量语法
+python3 -m unittest discover -s tests -p "test_*.py"  # 50 个用例
+python3 scripts/check_env.py                          # env 一致性
+python3 scripts/search_baseline.py --self-test        # 搜索调度自检(离线)
+cd frontend && npx tsc --noEmit && npm run build      # 前端类型 + 构建
 ```
 
 **测试全部只用标准库,不需要装三方依赖**——这是刻意设计,
@@ -153,7 +164,9 @@ cd frontend && npx tsc --noEmit && npm run build  # 前端类型 + 构建
 别以为这些已经好了:
 
 - **CI 没跑起来**:`.github/workflows/ci.yml` 已写好但**未能提交**,
-  因为 PAT 与 GitHub App 都缺 `workflows` scope。补齐前靠第 7 节的命令本地验证。
+  因为 PAT 与 GitHub App 都缺 `workflows` scope。补齐前靠 `scripts/ci.sh` 本地验证。
+- **`main` 已加分支保护**, 但暂不要求 status check(CI 未就位, 强设会导致 PR 全部卡住)。
+  workflow 权限补齐后, 应在 GitHub 设置里把 CI 改为必需检查。
 - **运行时从未真跑过**:开发环境 PyPI 被墙,`pip install` 不通。
   上面所有结论来自静态分析、AST 检查与桩驱动的单测。
   合并前必须在有依赖的环境做一次真实冒烟。

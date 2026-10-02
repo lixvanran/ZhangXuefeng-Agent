@@ -88,7 +88,56 @@ python3 tests/test_kb_registry.py
 python3 tests/test_config_consistency.py
 ```
 
-### 5. 文档修正
+### 5. 前端 P0:之前根本构建不了
+
+**`main` 上的 `npm run build` 是必失败的**, 全新克隆必现:
+
+```
+$ vite build
+error during build:
+[vite:load-fallback] Could not load .../src/data/demoScript: ENOENT
+```
+
+**完整根因链**(每一步都是静默的, 所以从未被发现):
+
+1. `.gitignore` 里写的是裸 `data/` —— gitignore 的无斜杠模式会匹配**任意层级**的
+   data 目录, 于是 `frontend/src/data/demoScript.ts` 被**静默忽略**
+2. `ChatPage.tsx:10` 一直在 import 它 → 该文件**从未进入任何一次提交**
+   (已用 `git rev-list --all` 逐个 commit 验证)
+3. `启动.bat` 走 `npm run dev`, vite dev 模式不做类型检查也不做产物构建, **掩盖了问题**
+4. 而 `npm run build` = `tsc && vite build`, 第一步就挂
+
+**这与 v0.9.1 修过的 `uploads/` 误伤 `workspace/uploads/` 是同一类问题** ——
+教训写进了 `.gitignore` 注释,但只修了一半, `data/` 漏了。
+
+**修复**:
+
+- 补回 `frontend/src/data/demoScript.ts`(按调用点的实际类型契约重建, 见文件头注释;
+  如果你手里有原版, 直接覆盖即可)
+- `.gitignore` 的 `data/` 收紧为 `/data/`, 运行期数据由既有的 `backend/data/` 覆盖
+- 新增 `tests/test_gitignore_safety.py` 盯住这类"源码被静默忽略"
+
+**验证**: `tsc --noEmit` 0 error, `vite build` 成功(修复前两者均失败)。
+
+> 补一句: `demoScript.ts` 是**按类型契约重建**的, 示例问题是合理占位而非原版内容。
+> 它只在 `getUserProfile()` 接口失败时作为兜底档案使用, 正常路径不影响。
+
+### 6. 工程基线
+
+- **`main` 已加分支保护**: 禁止强推与删除、合并需走 PR。
+  单人维护, 因此 `required_approving_review_count = 0`(不强设审批数), 且
+  **暂不要求 status check** —— CI 还没跑起来, 强设会导致所有 PR 无法合并。
+  补齐 workflow 权限后应改为强制 CI 通过。
+- **`AGENTS.md`**: 固化本轮定下的约定(扩 KB 只丢 json、provider 签名契约、
+  工具超时铁律、提交前必跑项、版本号三处同步)。
+- **`scripts/ci.sh`**: 本地一键复现全部 8 项检查, 作为 workflow 权限补齐前的替代。
+- **`scripts/check_env.py`**: env 一致性检查器。顺手发现两份 `.env.example`
+  还有 **6 个变量取值冲突**(`LLM_MODEL` / `VISION_MODEL` / `DEEP_THINKING_*` 等),
+  已让根目录那份改为显式指向 `backend/.env`, 冲突清零。
+- **`scripts/search_baseline.py`**: 15 条真实 query 的搜索质量基线。
+  此前"搜出来的结果时好时坏"只能靠肉眼判断, 现在有可量化的成功率/p50/p95 可对比。
+
+### 7. 文档修正
 
 - 错题本工作流章节改写为「上传资料」——自动入库功能已下线（见下）
 - Chat 页面空状态提示原文是「💡 在聊天里说"把上传文件夹里的错题整理一下"」，
