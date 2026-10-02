@@ -21,23 +21,29 @@ async def tavily_search(query: str, max_results: int = 10, time_hint: dict = Non
     try:
         import httpx
         payload = {
-            "api_key": settings.TAVILY_API_KEY,
             "query": query,
             "max_results": max_results,
             "search_depth": "basic",
             "include_answer": True,
         }
-        # Tavily 用 `days` 限定新鲜度, 对应我们的 recency 提示
+        # 时效性: Tavily 用 `time_range`(枚举 day/week/month/year)。
+        # v0.10.0 第一版这里写成了 `days`, 但官方 API 根本没有该参数 —— 依据
+        # https://docs.tavily.com/documentation/api-reference/endpoint/search
+        # 现已修正为 time_range, 并由 test_tavily_contract.py 锁定。
         if time_hint:
             recency = time_hint.get("recency")
-            days = {"day": 1, "week": 7, "month": 31, "year": 365}.get(recency)
-            if days:
-                payload["days"] = days
-                payload["topic"] = "news" if days <= 7 else "general"
+            tr = {"day": "day", "week": "week", "month": "month", "year": "year"}.get(recency)
+            if tr:
+                payload["time_range"] = tr
+                # 7 天内按新闻召回更准, 超过则用通用主题
+                payload["topic"] = "news" if tr in ("day", "week") else "general"
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.post(
                 "https://api.tavily.com/search",
-                json=payload,
+                # 官方文档要求 Authorization: Bearer <key>;
+                # 仍同时在 body 里带 api_key, 兼容仍接受该字段的部署。
+                headers={"Authorization": f"Bearer {settings.TAVILY_API_KEY}"},
+                json={**payload, "api_key": settings.TAVILY_API_KEY},
             )
         if resp.status_code == 200:
             data = resp.json()

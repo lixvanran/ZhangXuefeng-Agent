@@ -75,6 +75,15 @@ cp my_kb.json backend/knowledge_base/11_my_kb.json
 async def xxx_search(query: str, max_results: int = 10, time_hint: dict = None) -> Dict:
 ```
 
+**更隐蔽的一类: 写错参数名不会报错。** Tavily 就是活例子 —— 它的 API
+**没有 `days` 参数**, 只有 `time_range`(枚举 day/week/month/year);
+写错会被静默忽略, 表现为"功能好像在工作, 但时效性过滤从来没生效过"。
+改动任何 provider 的请求参数前, 先查官方文档, 并跑 `scripts/probe_providers.py`。
+
+**HTML 抓取类 provider(bing/baidu)靠 CSS 选择器**, 站点改版就静默返回 0 条。
+`scripts/probe_providers.py` 会直连真实站点复刻选择器链, 报告是否还能抽到结果 ——
+这是唯一能发现"代码没错但源已死"的办法。
+
 `web_search._try_provider_for_all_candidates` 会**无条件**下发 `time_hint=`。
 少这个参数就是 `TypeError`,而它被 `except Exception` 吞成一行 warning →
 **该源静默死亡且无人察觉**(Tavily 就这样死了一整年)。
