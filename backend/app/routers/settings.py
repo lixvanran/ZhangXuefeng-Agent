@@ -187,3 +187,15 @@ async def get_status(db: Session = Depends(get_db)):
             "high": _get_pref(db, 1, "model_high", DEFAULT_TIER_MODELS["high"]),
         },
     }
+
+
+@router.get("/knowledge-base")
+async def get_knowledge_base_status():
+    """知识库自省 — v0.10.0 新增
+
+    回答"为什么我加了资料/知识却搜不到"这类问题: 列出每个库的条目数、
+    来源、license、是否可检索, 以及是否用了自定义 schema。
+    之前只能翻 engine.py 源码才能知道一个库是否被检索。
+    """
+    from app.agent.rag.engine import rag_engine
+    return rag_engine.describe_kb()
