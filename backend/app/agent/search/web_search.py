@@ -1,14 +1,25 @@
 """联网搜索 - 统一入口
 v0.8.0 深度搜索 (豆包模式):
-- 8+ 个 query 变体
-- 6 个 provider 并行跑
-- top 10 抓全文 (不是 3 个)
+- 多个 query 变体
+- 多个 provider 并行跑
+- top N 抓全文
 - 子问题递归 (首次搜不到, 自动拆子 query 再搜一轮)
 - 全文排序去重, 给 LLM 详细带链接的整合材料
+
+v0.10.0 修 (原实现的扇出是乘法级的, 单次搜索最坏要 3 分钟且无任何反馈):
+- 1) **变体并发化**: 原来 provider 内部对 query 变体是顺序 for 循环,
+       5 个变体 × 每个 ~15s = 单 provider 就 ~75s, 6 个 provider 并行仍是 ~75s 墙钟。
+       改成变体也并发后, 同一 provider 内墙钟 ≈ 单个变体耗时。
+- 2) **全局时间预算**: 引入 SEARCH_TIME_BUDGET_SEC, 整轮搜索有硬上限,
+       预算耗尽就带着已有结果收尾, 不再无限等。
+- 3) **子搜索降级**: 子问题搜索改成有条件触发 (真的一个 provider 都没成功才触发),
+       且自身也受剩余预算约束, 不再叠加一整轮全 provider × 全变体。
+- 4) **可观测性**: 无论成功失败都记录各源耗时/条数/错误, 写日志 + 返回给上层。
 """
 import asyncio
 import logging
 import re
+import time
 from typing import Dict, List, Tuple
 
 from app.core.config import settings
@@ -20,6 +31,13 @@ from app.agent.search.providers import (
 )
 
 logger = logging.getLogger(__name__)
+
+# v0.10.0: 整轮搜索的硬时间预算(秒)。超时就用已有结果收尾。
+SEARCH_TIME_BUDGET_SEC = 45.0
+# 单个 provider 的墙钟上限
+PROVIDER_TIMEOUT_SEC = 15.0
+# 子问题搜索最多用掉剩余预算的这一比例
+SUB_SEARCH_BUDGET_RATIO = 0.4
 
 
 # ===== 工具函数 =====
@@ -50,10 +68,10 @@ def _score_result(r: dict, query: str) -> float:
     content = r.get("content", "")
     url = r.get("url", "")
     # query 关键词匹配
-    q_words = set(re.findall(r"[\w\u4e00-\u9fff]+", query))
+    q_words = set(re.findall(r"[\w一-鿿]+", query))
     if q_words:
-        t_words = set(re.findall(r"[\w\u4e00-\u9fff]+", title))
-        c_words = set(re.findall(r"[\w\u4e00-\u9fff]+", content[:500]))
+        t_words = set(re.findall(r"[\w一-鿿]+", title))
+        c_words = set(re.findall(r"[\w一-鿿]+", content[:500]))
         score += len(q_words & t_words) * 2.0
         score += len(q_words & c_words) * 0.5
     # 来源权威 (适度)
@@ -81,32 +99,64 @@ def _score_result(r: dict, query: str) -> float:
     return score
 
 
+def _log_provider_status(stage: str, providers_status: list) -> None:
+    """v0.10.0 可观测性: 把每个源的 ok/条数/耗时/错误记成一行日志
+
+    之前只有失败路径才看得到信息, 成功时各源质量无从追溯 ——
+    这正是"搜索看起来时好时坏"却查不出原因的直接原因。
+    """
+    parts = []
+    for p in providers_status:
+        mark = "OK" if p.get("ok") else "FAIL"
+        err = f" err={p['error']}" if p.get("error") else ""
+        parts.append(f"{p.get('name')}={mark}({p.get('count', 0)}条 {p.get('elapsed', 0)}s{err})")
+    logger.info(f"[{stage}] {' '.join(parts)}")
+
+
 async def _try_provider_for_all_candidates(provider_fn, candidates, max_results) -> list:
-    """对所有 query 变体跑同一个 provider, 合并结果"""
-    merged = []
-    for q, h in candidates:
+    """对所有 query 变体跑同一个 provider, 合并结果
+
+    v0.10.0: 变体从"顺序 for"改为并发 gather。
+    原来 5 个变体串行, 每个最多 15s → 单 provider 75s 墙钟;
+    并发后 ≈ 单个变体耗时, 整轮墙钟降一个数量级。
+    """
+    async def _one(q: str, h: dict) -> list:
         try:
             result = await provider_fn(q, max_results, time_hint=h)
             if result.get("success") and result.get("results"):
                 # 给每条结果标记 source query (LLM 可以看到为啥搜出来的)
                 for r in result["results"]:
                     r["_source_query"] = q
-                merged.extend(result["results"])
+                return result["results"]
+            return []
         except Exception as e:
             logger.warning(f"provider {provider_fn.__name__} failed on '{q[:30]}': {e}")
+            return []
+
+    chunks = await asyncio.gather(*(_one(q, h) for q, h in candidates))
+    merged = []
+    for c in chunks:
+        merged.extend(c)
     return merged
 
 
-async def _run_one_provider(name: str, fn, candidates, max_results, timeout=12.0) -> Tuple[str, list, str]:
-    """跑一个 provider, 返回 (name, results, error)"""
+async def _run_one_provider(name: str, fn, candidates, max_results,
+                            timeout=PROVIDER_TIMEOUT_SEC) -> Tuple[str, list, str, float]:
+    """跑一个 provider, 返回 (name, results, error, elapsed_sec)
+
+    v0.10.0: 增加耗时统计, 供可观测性使用; 超时从笼统 Exception 里单独拎出来。
+    """
+    t0 = time.monotonic()
     try:
         results = await asyncio.wait_for(
             _try_provider_for_all_candidates(fn, candidates, max_results),
             timeout=timeout,
         )
-        return (name, results, "")
+        return (name, results, "", round(time.monotonic() - t0, 2))
+    except asyncio.TimeoutError:
+        return (name, [], f"timeout after {timeout}s", round(time.monotonic() - t0, 2))
     except Exception as e:
-        return (name, [], str(e)[:100])
+        return (name, [], str(e)[:100], round(time.monotonic() - t0, 2))
 
 
 async def _fetch_fulltext_batch(urls: List[str], max_chars: int = 6000, max_concurrent: int = 5) -> List[Dict]:
@@ -139,7 +189,7 @@ async def _fetch_url_direct(url: str, max_chars: int = 6000) -> Dict:
 # ===== 子问题拆分 =====
 
 def _generate_sub_queries(query: str, time_hint: dict) -> List[str]:
-    """当主 query 搜不到结果时, 自动生成 2-3 个子问题再搜
+    """当主 query 完全搜不到结果时, 自动生成 2-3 个子问题再搜
     比如 "武汉 2026 中考普高线" → ["武汉 2026 中考分数线", "武汉教育局 2026 录取线", "湖北武汉中考 普高"]
     """
     subs = []
@@ -179,15 +229,19 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
             "results": [排序后的 top max_results 条],
             "candidates_tried": [变体 query 列表],
             "time_hint": {recency, now_str, year_month},
-            "providers_tried": [(name, ok, count, error), ...],
+            "providers_tried": [{name, ok, count, error, elapsed}],
             "sub_searches": [子问题搜索次数],
             "fulltext_count": 抓全文成功数,
+            "elapsed_sec": 整轮耗时,
+            "budget_exhausted": 是否因超时提前收尾,
         }
     """
+    t_start = time.monotonic()
+    deadline = t_start + SEARCH_TIME_BUDGET_SEC
     candidates = make_queries(query, max_results * 2)  # 多生成变体
     time_hint = candidates[0][1] if candidates else {"now_str": "", "recency": None, "year_month": ""}
 
-    # === 第一轮: 主搜索 (6 provider 并行) ===
+    # === 第一轮: 主搜索 (所有 provider 并行) ===
     providers_to_try: List[Tuple[str, callable]] = []
     if settings.TAVILY_API_KEY:
         providers_to_try.append(("tavily", tavily_search))
@@ -200,7 +254,7 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
     ])
 
     tasks = [
-        _run_one_provider(name, fn, candidates, max_results, timeout=15.0)
+        _run_one_provider(name, fn, candidates, max_results, timeout=PROVIDER_TIMEOUT_SEC)
         for name, fn in providers_to_try
     ]
     round1_results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -210,40 +264,61 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
     primary_provider = "none"
     for r in round1_results:
         if isinstance(r, Exception):
-            providers_status.append({"name": "unknown", "ok": False, "count": 0, "error": str(r)[:100]})
+            providers_status.append({"name": "unknown", "ok": False, "count": 0,
+                                     "error": str(r)[:100], "elapsed": 0.0})
             continue
-        name, prov_results, err = r
+        name, prov_results, err, elapsed = r
         providers_status.append({
             "name": name,
             "ok": bool(prov_results),
             "count": len(prov_results),
             "error": err,
+            "elapsed": elapsed,
         })
         if prov_results:
             if primary_provider == "none":
                 primary_provider = name
             all_results.extend(prov_results)
 
-    # === 第二轮: 子问题搜索 (主搜没结果时) ===
+    # v0.10.0 可观测性: 成功路径也记一行, 便于事后定位"为什么这次结果这么差"
+    _log_provider_status(f"round1 '{query[:40]}'", providers_status)
+
+    # === 第二轮: 子问题搜索 ===
+    # v0.10.0: 触发条件从"结果 < 3 条"收紧为"一个 provider 都没成功"。
+    # 原来只要少于 3 条就叠加一整轮 (子 query × 变体 × 全 provider),
+    # 在"确实搜到 1-2 条但不够多"的常见场景下白白多花 1-2 分钟, 收益微乎其微。
     sub_searches = []
-    if len(all_results) < 3:
+    budget_exhausted = False
+    ok_providers = [p for p in providers_status if p.get("ok")]
+    remaining = deadline - time.monotonic()
+    if not ok_providers and remaining > 5:
         sub_queries = _generate_sub_queries(query, time_hint)
+        sub_deadline = min(deadline, time.monotonic() + remaining * SUB_SEARCH_BUDGET_RATIO)
         for sub_q in sub_queries[:2]:  # 最多 2 个子问题
+            if time.monotonic() >= sub_deadline:
+                budget_exhausted = True
+                break
             sub_searches.append(sub_q)
             sub_candidates = make_queries(sub_q, max_results)
+            # 每个子 query 只跑前 3 个变体, 避免子搜索再次爆炸
             sub_tasks = [
-                _run_one_provider(name, fn, sub_candidates, max_results, timeout=10.0)
+                _run_one_provider(
+                    name, fn, sub_candidates[:3], max_results,
+                    timeout=min(PROVIDER_TIMEOUT_SEC, max(3.0, sub_deadline - time.monotonic())))
                 for name, fn in providers_to_try
             ]
             sub_results = await asyncio.gather(*sub_tasks, return_exceptions=True)
+            got = 0
             for r in sub_results:
                 if isinstance(r, Exception):
                     continue
-                name, prov_results, err = r
+                name, prov_results, err, elapsed = r
                 if prov_results:
                     for x in prov_results:
                         x["_source_query"] = sub_q
                     all_results.extend(prov_results)
+                    got += len(prov_results)
+            logger.info(f"sub_search '{sub_q[:40]}' -> {got} 条")
 
     # === 去重 + 评分排序 ===
     deduped = _dedup_by_url(all_results)
@@ -251,6 +326,7 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
     top_results = deduped[:max_results * 2]  # 留出抓全文失败的 buffer
 
     if not top_results:
+        elapsed_total = round(time.monotonic() - t_start, 2)
         return {
             "success": False,
             "provider": "none",
@@ -262,11 +338,25 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
             "providers_tried": providers_status,
             "sub_searches": sub_searches,
             "fulltext_count": 0,
+            "elapsed_sec": elapsed_total,
+            "budget_exhausted": budget_exhausted,
         }
 
-    # === 抓全文 (top 10) ===
-    urls_to_fetch = [r.get("url", "") for r in top_results[:10]]
-    fulltexts_raw = await _fetch_fulltext_batch(urls_to_fetch, max_chars=6000, max_concurrent=4)
+    # === 抓全文 (top N, 受剩余预算约束) ===
+    # v0.10.0: 原来固定抓 10 个, 无视剩余时间。这里按剩余预算决定抓几个。
+    remaining = deadline - time.monotonic()
+    if remaining > 3:
+        max_fetch = 10 if remaining > 20 else 5
+        urls_to_fetch = [r.get("url", "") for r in top_results[:max_fetch]]
+        fulltexts_raw = await asyncio.wait_for(
+            _fetch_fulltext_batch(urls_to_fetch, max_chars=6000, max_concurrent=4),
+            timeout=max(3.0, remaining),
+        )
+    else:
+        logger.info(f"skip fulltext fetch: budget nearly exhausted ({remaining:.1f}s left)")
+        fulltexts_raw = []
+        budget_exhausted = True
+
     # 关联
     url_to_text = {ft["url"]: ft.get("text", "") for ft in fulltexts_raw if ft.get("success")}
     fulltext_count = len(url_to_text)
@@ -276,6 +366,11 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
         if url in url_to_text and url_to_text[url]:
             r["_full_text"] = url_to_text[url]
 
+    elapsed_total = round(time.monotonic() - t_start, 2)
+    logger.info(
+        f"web_search '{query[:40]}' ok: {len(top_results)} results "
+        f"({fulltext_count} fulltext) in {elapsed_total}s"
+    )
     return {
         "success": True,
         "provider": primary_provider,
@@ -286,4 +381,6 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
         "providers_tried": providers_status,
         "sub_searches": sub_searches,
         "fulltext_count": fulltext_count,
+        "elapsed_sec": elapsed_total,
+        "budget_exhausted": budget_exhausted,
     }

@@ -7,6 +7,7 @@ v0.8.0+: stop_event 支持中途打断 (Stop 按钮响应延迟从 reasoning 等
 import json
 import logging
 import asyncio
+import time
 from typing import Dict, AsyncGenerator, List, Tuple, Optional
 
 from app.agent.llm import llm_client, deep_thinking_client
@@ -15,6 +16,30 @@ from app.agent.tools import execute_tool
 from app.agent.pipeline.postprocessor import sanitize_llm_output
 
 logger = logging.getLogger(__name__)
+
+# v0.10.0: 每类工具的墙钟上限(秒)。未列出的工具用 DEFAULT_TOOL_TIMEOUT_SEC。
+# 依据: 本地计算类工具(admission/major/workspace)应该毫秒级返回, 30s 足够;
+# search_web 内部已有 45s 硬预算, 这里留出余量。
+TOOL_TIMEOUTS: Dict[str, float] = {
+    "search_web": 60.0,
+    "fetch_url": 20.0,
+    "query_college": 30.0,
+    "analyze_major": 30.0,
+    "calculate_admission_probability": 30.0,
+    "calculate_match": 30.0,
+    "compare_schools": 30.0,
+    "search_school": 30.0,
+    "search_major": 30.0,
+    "query_school_admission": 30.0,
+    "search_policy": 30.0,
+    "workspace_read": 30.0,
+    "read_file": 30.0,
+}
+DEFAULT_TOOL_TIMEOUT_SEC = 30.0
+
+
+def _tool_timeout(name: str) -> float:
+    return TOOL_TIMEOUTS.get(name, DEFAULT_TOOL_TIMEOUT_SEC)
 
 
 async def _check_stop(stop_event: Optional[asyncio.Event], check_counter: int = 0):
@@ -97,6 +122,12 @@ async def _do_stream_with_models(
 async def _execute_tool_calls(tool_calls: list) -> Tuple[List[Dict], List[Dict]]:
     """执行所有 tool calls
     Returns: (tool_calls_log, tool_messages)
+
+    v0.10.0 修: 之前这里直接 `await execute_tool(...)` 没有任何超时上限,
+    任何一个慢工具(尤其 search_web 会并发打 6 个 provider + 抓 10 个全文)
+    都能把整轮对话无限期挂死 —— 这就是 v0.9.7 "错题卡死" 那类 bug 的根因。
+    现在每个工具有独立超时, 超时后返回一个结构化的降级结果给 LLM,
+    让它能基于"工具失败"继续回答, 而不是整个请求卡住。
     """
     log = []
     messages = []
@@ -106,12 +137,28 @@ async def _execute_tool_calls(tool_calls: list) -> Tuple[List[Dict], List[Dict]]
             args = json.loads(tc.function.arguments) if tc.function.arguments else {}
         except Exception:
             args = {}
-        result = await execute_tool(name, args)
+
+        timeout = _tool_timeout(name)
+        t0 = time.monotonic()
+        try:
+            result = await asyncio.wait_for(execute_tool(name, args), timeout=timeout)
+        except asyncio.TimeoutError:
+            elapsed = time.monotonic() - t0
+            logger.warning(f"tool {name} timed out after {timeout}s (elapsed {elapsed:.1f}s)")
+            result = {
+                "error": f"tool_timeout",
+                "message": f"{name} 执行超过 {timeout:.0f} 秒未返回, 已跳过。请基于已有信息回答, 或改用更窄的查询重试一次。",
+                "timeout_sec": timeout,
+            }
+        except Exception as e:
+            logger.error(f"tool {name} raised: {e}")
+            result = {"error": f"{type(e).__name__}: {str(e)[:200]}"}
+
         log.append({"tool": name, "args": args, "result": result})
         messages.append({
             "role": "tool",
             "tool_call_id": tc.id,
-            "content": json.dumps(result, ensure_ascii=False),
+            "content": json.dumps(result, ensure_ascii=False, default=str),
         })
     return log, messages
 

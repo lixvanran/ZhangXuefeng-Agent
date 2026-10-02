@@ -74,6 +74,19 @@ def _format_search_result(query: str, result: Dict, fulltexts: list) -> str:
     providers_status = result.get("providers_tried", [])
     fulltext_count = result.get("fulltext_count", 0)
     sub_searches = result.get("sub_searches", [])
+    elapsed = result.get("elapsed_sec")
+
+    # v0.10.0: 把"哪些源没成 / 耗时多久"也摆到 LLM 眼前。
+    # 之前只在全失败时才给状态, 成功路径下搜索质量下降对模型完全不可见,
+    # 模型会拿着 2 条残缺结果硬编, 还不告诉用户"其实只搜到这些"。
+    failed = [p for p in providers_status if not p.get("ok")]
+    degraded = ""
+    if failed:
+        names = ", ".join(p.get("name", "?") for p in failed)
+        degraded = (
+            f"\n- ⚠️ 本次有 {len(failed)}/{len(providers_status)} 个搜索源未返回结果 ({names})"
+            f"\n  **请在回答里如实说明信息来源有限**, 不要把少量结果当成完整结论。"
+        )
 
     lines = [
         f"# 🔍 联网搜索结果 (查询: {query}, 检索时间: {now_str})",
@@ -84,6 +97,12 @@ def _format_search_result(query: str, result: Dict, fulltexts: list) -> str:
         f"- 抓全文: {fulltext_count} 条",
         f"- 子问题: {len(sub_searches)} 次" + (f" ({', '.join(sub_searches)})" if sub_searches else ""),
         f"- 用户期望时效性: {recency_zh}",
+    ]
+    if elapsed:
+        lines.append(f"- 总耗时: {elapsed}s")
+    if degraded:
+        lines.append(degraded)
+    lines += [
         f"",
         "## 📋 搜索结果 (含摘要)",
         "",
