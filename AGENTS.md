@@ -28,6 +28,8 @@
 | `scripts/` 下 4 个声音克隆脚本是**预留**状态 | 保留不删、不开发、不接入运行时。详见 `scripts/RESERVED.md` |
 | `.gitignore` 里的裸 `data/` 曾静默忽略 `frontend/src/data/demoScript.ts` | v0.10.0 已收紧为 `/data/`。**加 gitignore 规则时必须用前导 `/` 锚定**, 否则匹配任意层级, 且是静默失败 |
 | `frontend/src/data/demoScript.ts` 是 v0.10.0 **重建**的, 非原版 | 内容是按类型契约写的合理占位。你若有原版直接覆盖, 只需满足文件头注释里的契约 |
+| 前端装依赖**必须加 `--ignore-scripts`** | `electron` 的 postinstall 要下 ~100MB 二进制, 网络不佳时失败。更糟的是 `npm ci` 失败前会**先清空 node_modules**, 导致连 tsc 都跑不了。`启动.bat:110` 用的也是这个参数, CI 与 `scripts/ci.sh` 已照此配置 |
+| `npx tsc` 在依赖未装全时会**临时下载别的 TypeScript** | 版本对不上会报 `csstype/index.d.ts ... Unterminated string literal` 之类的假错误。稳妥做法: `node node_modules/typescript/lib/tsc.js --noEmit` |
 | TTS 已改浏览器 Web Speech API | `synthesize_speech()` 返回 `None` 是**预期行为**,不是 bug |
 
 ---

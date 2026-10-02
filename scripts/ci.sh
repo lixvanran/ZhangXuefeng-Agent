@@ -36,7 +36,11 @@ step() {
 step "内部 import 解析"        python3 check_imports.py
 step "后端全量语法编译"         python3 -m compileall -q backend/app
 step "后端脚本语法编译"         python3 -m compileall -q scripts
-step "单元测试 (45 用例)"       python3 -m unittest discover -s tests -p "test_*.py" -v
+# 用例数动态取, 避免硬编码后与实际脱节
+N_TESTS=$(python3 -m unittest discover -s tests -p "test_*.py" 2>&1 \
+          | sed -n 's/^Ran \([0-9]*\) tests\?.*/\1/p' | head -1)
+N_TESTS=${N_TESTS:-?}
+step "单元测试 (${N_TESTS} 用例)" python3 -m unittest discover -s tests -p "test_*.py" -v
 step "env 配置一致性"           python3 scripts/check_env.py
 step "搜索基线自检(离线)"       python3 scripts/search_baseline.py --self-test
 
@@ -47,7 +51,10 @@ if [ "$FAST" -eq 1 ]; then
 else
     if [ ! -d frontend/node_modules ]; then
         printf '\n\033[1m── 安装前端依赖\033[0m\n'
-        (cd frontend && npm ci --no-audit --no-fund) \
+        # --ignore-scripts 是必需的: electron 的 postinstall 要下 ~100MB 二进制,
+        # 网络不佳时会失败, 且 npm ci 失败前会先清空 node_modules, 反而更糟。
+        # tsc / vite build 都不需要它。启动.bat:110 用的也是这个参数。
+        (cd frontend && npm ci --no-audit --no-fund --ignore-scripts) \
             && PASSED+=("npm ci") \
             || FAILED+=("npm ci")
     fi
