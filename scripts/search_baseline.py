@@ -101,7 +101,8 @@ def _install_stubs(provider_delay=0.0, success=()):
     prov._self_test_delay = provider_delay
     prov._self_test_success = set(success)
     for name in ("tavily_search", "bing_html_search", "duckduckgo_search",
-                 "baidu_search", "wikipedia_search", "arxiv_search"):
+                 "baidu_search", "wikipedia_search", "arxiv_search",
+                 "sogou_search", "so360_search"):   # v0.10.0: 含新增中文源
         setattr(prov, name, _make_stub_provider(name, provider_delay, set(success)))
     search.providers = prov
 
@@ -266,7 +267,8 @@ async def main():
         # 自检模式: 全部桩掉
         ws = _install_stubs(
             provider_delay=0.0,
-            success=("bing_html_search", "baidu_search", "tavily_search"),
+            success=("bing_html_search", "baidu_search", "tavily_search",
+                     "sogou_search", "so360_search"),
         )
         print("离线自检模式: provider 为桩, 不发网络请求")
 
