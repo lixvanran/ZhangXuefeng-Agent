@@ -702,7 +702,7 @@ export default function ChatPage() {
                     </button>
                   </span>
                 ))}
-                <span className="text-zinc-400 self-center">💡 在聊天里说"把上传文件夹里的错题整理一下"</span>
+                <span className="text-zinc-400 self-center">💡 可以直接上传图片/资料让张老师看, 或直接描述你的问题</span>
               </div>
             )}
             <div className="flex gap-2 items-end">
@@ -719,7 +719,7 @@ export default function ChatPage() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
                 className="apple-btn disabled:opacity-30"
-                title="上传错题图片/PDF/Word 到 workspace/uploads/"
+                title="上传图片/资料到 workspace/uploads/, 供张老师阅读"
               >
                 {uploading ? (
                   <Loader2 size={16} className="animate-spin" />

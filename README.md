@@ -1,4 +1,4 @@
-# 张雪峰智能体 v0.9.8
+# 张雪峰智能体 v0.10.0
 
 > 敢说真话的 AI 备考与志愿填报助手
 
@@ -9,6 +9,179 @@
 停止.bat   ← 双击停止
 诊断.bat   ← 出问题用
 ```
+
+## v0.10.0 升级要点
+
+> **v0.10.0 — 修"僵尸功能" + 知识库可插拔 + 补上第一道 CI**
+
+### 1. 联网搜索：修好了，也终于不再是"僵尸"
+
+之前这个功能**看起来是开的，实际全是坏的**，而且慢到会拖死整个对话：
+
+| 问题 | 症状 | 根因 | 修法 |
+|---|---|---|---|
+| Tavily 100% 静默死亡 | 配了 `TAVILY_API_KEY` 也从没生效过 | `tavily_search()` 签名缺 `time_hint`，而调用方无条件下发这个关键字 → `TypeError` 被宽 `except` 吞成一行 warning | 补签名 + 接上 `days`/`topic` 参数；`requirements.txt` 取消注释（之前被注释掉了，README 宣称的 "Tavily primary" 从未成立） |
+| 扇出是乘法级的 | 单次搜索最坏 **~3 分钟**，期间界面无任何反馈 | provider 内部对 query 变体是**顺序 for**（5 变体 × 15s = 75s），子搜索再叠加一整轮 | 变体改 `asyncio.gather` 并发；整轮加 **45s 硬时间预算**；子搜索触发条件从"结果 < 3 条"收紧为"一个源都没成功" |
+| 工具执行无超时 | 搜索一慢，**整轮对话卡死** | `_execute_tool_calls()` 裸 `await execute_tool()`，无任何上限 | 每个工具独立超时（`search_web` 60s / 本地计算类 30s）；超时返回结构化降级结果让 LLM 继续答，而不是挂住 |
+| DuckDuckGo 包名废弃 | 免费兜底源经常装不上/调不通 | 官方包已改名 `ddgs`，`duckduckgo_search` 停止维护 | 两种包名都兼容，优先新包；`requirements.txt` 换 `ddgs>=9` |
+| 失败不可见 | 搜出来的结果时好时坏，**查不出原因** | 只在全失败时才暴露各源状态 | 各源耗时/条数/错误一律进日志和返回体；部分源失败时明确告诉模型"信息来源有限，要如实说明" |
+
+**现在的行为**：整轮 45s 硬上限 → 抓全文按剩余预算决定抓几个 → 全程有耗时日志。
+
+### 2. 知识库：终于可以"丢个文件就生效"
+
+之前扩一个知识库要改 `engine.py` **三处**（`KB_INDEX_FIELD`、`KB_DISPLAY_FIELD`、
+`_format_result`），漏改任何一处都不报错 —— `search_knowledge_base()` 里的
+`if not index_fn or not display_fn: continue` 会把这个库**静默跳过**：文件加载了，
+但永远搜不到。README 写的"RAG 自动发现加载（无需改代码）"只对"加载"成立。
+
+现在改成 `KBRegistry` 注册表：
+
+```bash
+# 最简用法：丢个文件进 backend/knowledge_base/ 就完事
+cp my_kb.json backend/knowledge_base/11_my_kb.json
+```
+
+```jsonc
+// backend/knowledge_base/11_my_kb.manifest.json  ← 可选，需要自定义展示时才写
+{
+  "index_fields":   ["text", "tags"],   // 哪些字段参与检索
+  "display_fields": ["text", "summary"],// 怎么展示给 LLM
+  "source":  "https://github.com/xxx/yyy",
+  "license": "CC BY 4.0",
+  "enabled": true
+}
+```
+
+- 没写 manifest → 走通用兜底，**照样能搜到**（不再是静默跳过）
+- `source` / `license` 会一路带到检索结果和展示层（v0.9.8 引入的 CC BY 4.0 / MIT
+  开源内容需要署名）
+- 运行时挂载：`rag_engine.knowledge_base.register("name", items, ...)`，不用重启
+- 自省：`GET /api/settings/knowledge-base` 列出每个库的条目数/来源/license/是否可检索
+  —— 以后"为什么搜不到"不用翻源码了
+
+### 3. 顺手修掉的另外两处死代码
+
+- **实体 boost 一直是死的**：`boost.py` 硬编码找 `"gaokao_2026"` 这个库，
+  但 v0.8.0 把 KB 重做成 `01_*` / `08_admission_scores` 之后该库已不存在 →
+  `maybe_apply_boost()` 永远返回 `[]`。已改为按候选名探测并适配新库字段。
+- **`TIER_MODEL_*` / `TIER_FALLBACK_*` 是死配置**：v0.9.3 起档位模型只从
+  `user_preferences` 表读，这些 env 变量改了没有任何效果。已在 `config.py` 和
+  两份 `.env.example` 标注废弃，并加测试锁住"没人读它"这个事实。
+  改档位模型请用**前端系统设置页**。
+
+### 4. 补上第一道 CI
+
+仓库此前**没有任何 CI，也没有任何测试**。现在 `.github/workflows/ci.yml` 会跑：
+
+- 内部 import 解析（查重构留下的悬空引用）
+- 全量语法编译
+- 3 套回归测试，共 **37 个用例**（`tests/`）
+- 前端 `tsc --noEmit` + `vite build`
+
+三个后端测试**只用标准库**，不需要装三方依赖，CI 跑得很快。本地同样：
+
+```bash
+python3 check_imports.py
+python3 tests/test_search_scheduling.py
+python3 tests/test_kb_registry.py
+python3 tests/test_config_consistency.py
+```
+
+### 4.5 联网搜索的实测结论(重要, 别误读)
+
+调度层修好了, 但**端到端真跑之后发现: 两个 HTML 抓取源本身不可用**。
+2026-10-02 用 `scripts/real_search_test.py` 实测(真实网络 + 真代码):
+
+| 查询 | Bing 词覆盖率 | Baidu |
+|---|---|---|
+| 广东 2025 高考一本线 多少分 | 25% | 限流 |
+| 强基计划 报考条件 | 0% | 限流 |
+| 人工智能专业 就业前景 怎么样 | 0% | 限流 |
+
+**Bing: 单 term 查询很好, 多 term 查询退化成只匹配第一个词。**
+
+- 「强基计划」→ 百科 / 报考指南 / 知乎攻略 / 华科招生简章 ✅
+- 「强基计划 报考条件」→ 汉字"强"的字典页 ❌
+- 「asyncio」→ 菜鸟教程 / 廖雪峰 / Python 官方 ✅
+- 「asyncio python tutorial」→ 同上, 后半截被忽略 ❌
+
+而本产品的 `make_queries()` **生成的恰恰全是多 term 查询**
+(「2025 广东 高考 录取分数线」这类), 所以正好踩在最差的情况上。
+实测返回的"省人民政府门户网站""旅游景点"就是 Bing 把查询当成"广东"实体检索的结果。
+
+**Baidu: 能用但限流极狠。** 干净时能抽到 20 条(央广网等权威源),
+但连打几十次后进入验证页, **冷却 3 分钟仍未恢复** —— 对数据中心/云 IP 是硬限。
+
+**结论与建议**: HTML 抓取这条路在云环境下走不通, 建议:
+
+1. **优先配 `TAVILY_API_KEY`** —— Tavily 是正规 API, 1000 次/月免费,
+   专为此场景设计, 不限流不变形。本轮已修好它的签名与参数(见 §4),
+   配上 key 即成为首选源, 且 `web_search` 会自动把它排在第一位。
+2. 配上 Tavily 前, 搜索只能算"能跑但基本不准", 建议在 UI 上如实告知用户,
+   或暂时默认关闭联网搜索, 避免给出看着有出处、实则答非所问的内容。
+3. 定期跑 `scripts/probe_providers.py` 监控各源健康度(会给出
+   可用 / 低质 / 限流 / 失效 四档判定与关键词覆盖率)。
+
+> ⚠️ 这次实测也说明:**只跑桩测试会给出过于乐观的结论**。
+> 37 个单元测试全绿时, 搜索的调度层确实是对的, 但源本身早已不可用 ——
+> 桩 provider 不会暴露"抓到一堆垃圾"这种问题。
+
+### 5. 前端 P0:之前根本构建不了
+
+**`main` 上的 `npm run build` 是必失败的**, 全新克隆必现:
+
+```
+$ vite build
+error during build:
+[vite:load-fallback] Could not load .../src/data/demoScript: ENOENT
+```
+
+**完整根因链**(每一步都是静默的, 所以从未被发现):
+
+1. `.gitignore` 里写的是裸 `data/` —— gitignore 的无斜杠模式会匹配**任意层级**的
+   data 目录, 于是 `frontend/src/data/demoScript.ts` 被**静默忽略**
+2. `ChatPage.tsx:10` 一直在 import 它 → 该文件**从未进入任何一次提交**
+   (已用 `git rev-list --all` 逐个 commit 验证)
+3. `启动.bat` 走 `npm run dev`, vite dev 模式不做类型检查也不做产物构建, **掩盖了问题**
+4. 而 `npm run build` = `tsc && vite build`, 第一步就挂
+
+**这与 v0.9.1 修过的 `uploads/` 误伤 `workspace/uploads/` 是同一类问题** ——
+教训写进了 `.gitignore` 注释,但只修了一半, `data/` 漏了。
+
+**修复**:
+
+- 补回 `frontend/src/data/demoScript.ts`(按调用点的实际类型契约重建, 见文件头注释;
+  如果你手里有原版, 直接覆盖即可)
+- `.gitignore` 的 `data/` 收紧为 `/data/`, 运行期数据由既有的 `backend/data/` 覆盖
+- 新增 `tests/test_gitignore_safety.py` 盯住这类"源码被静默忽略"
+
+**验证**: `tsc --noEmit` 0 error, `vite build` 成功(修复前两者均失败)。
+
+> 补一句: `demoScript.ts` 是**按类型契约重建**的, 示例问题是合理占位而非原版内容。
+> 它只在 `getUserProfile()` 接口失败时作为兜底档案使用, 正常路径不影响。
+
+### 6. 工程基线
+
+- **`main` 已加分支保护**: 禁止强推与删除、合并需走 PR。
+  单人维护, 因此 `required_approving_review_count = 0`(不强设审批数), 且
+  **暂不要求 status check** —— CI 还没跑起来, 强设会导致所有 PR 无法合并。
+  补齐 workflow 权限后应改为强制 CI 通过。
+- **`AGENTS.md`**: 固化本轮定下的约定(扩 KB 只丢 json、provider 签名契约、
+  工具超时铁律、提交前必跑项、版本号三处同步)。
+- **`scripts/ci.sh`**: 本地一键复现全部 8 项检查, 作为 workflow 权限补齐前的替代。
+- **`scripts/check_env.py`**: env 一致性检查器。顺手发现两份 `.env.example`
+  还有 **6 个变量取值冲突**(`LLM_MODEL` / `VISION_MODEL` / `DEEP_THINKING_*` 等),
+  已让根目录那份改为显式指向 `backend/.env`, 冲突清零。
+- **`scripts/search_baseline.py`**: 15 条真实 query 的搜索质量基线。
+  此前"搜出来的结果时好时坏"只能靠肉眼判断, 现在有可量化的成功率/p50/p95 可对比。
+
+### 7. 文档修正
+
+- 错题本工作流章节改写为「上传资料」——自动入库功能已下线（见下）
+- Chat 页面空状态提示原文是「💡 在聊天里说"把上传文件夹里的错题整理一下"」，
+  引导用户走一条**已经不存在的链路**（`wrong_book_*` 工具 2026-09-30 被删）。
+  已改为中性文案。
 
 ## 怎么用
 
@@ -170,12 +343,17 @@ OPENAI_API_KEY=xxx
 
 改完保存，**重启 `启动.bat`** 生效。
 
-## 错题本工作流 (v0.9.5)
+## 上传资料 (v0.10.0 起)
 
-1. 把错题图片/PDF/Word/文本**拖到** `workspace/uploads/`（或用 Chat 页面 📎 上传）
-2. 在 Chat 里说 **"把上传文件夹里的错题整理一下"**
-3. Agent 自动扫描 → Vision 识别内容 → 提取学科/知识点/错误类型 → 写入错题本（自动 M-001 编号 + RAG 索引）
-4. 之后问"我错过的圆锥曲线题"会引用到错题本
+1. 把图片/PDF/Word/文本**拖到** `workspace/uploads/`（或用 Chat 页面 📎 上传）
+2. 在 Chat 里**直接描述你的问题**，张老师会读取 uploads 里的文件作答
+3. 想长期沉淀某道错题，去"资料"页**手动添加**（保留 M-001 编号体系 + RAG 索引）
+4. 之后问"我记过的圆锥曲线题"会引用到资料库
+
+> ⚠️ **v0.10.0 变更**：v0.9.5 的"说一句『把上传文件夹里的错题整理一下』→ Agent 自动
+> 扫描入库"工作流已**下线**（`wrong_book_*` 4 个工具在 2026-09-30 被移除）。
+> 上传 + 手动添加仍然可用；自动整理入库暂不可用。
+> 详见下方 v0.10.0 升级要点。
 
 ## 系统设置 (v0.9.5)
 

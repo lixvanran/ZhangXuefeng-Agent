@@ -30,7 +30,16 @@ release/
 *.tsbuildinfo
 
 # ===== 数据 & 缓存 =====
-data/
+# v0.10.0 修: 原来这里写的是裸 `data/`, gitignore 的无斜杠模式会匹配**任意层级**的
+# data 目录, 结果 `frontend/src/data/demoScript.ts` 被静默忽略 ——
+# 而 ChatPage.tsx:10 一直在 import 它, 导致前端在**任何一次全新克隆后都无法构建**:
+#     [vite:load-fallback] Could not load .../src/data/demoScript: ENOENT
+# 该文件因此从未进入过任何一次提交(已用 git rev-list --all 逐个 commit 验证)。
+# 之所以一直没人发现: 启动.bat 走 npm run dev, dev 模式不检查也不产物构建。
+#
+# 这与 v0.9.1 修的 uploads/ 误伤是同一类问题 —— 教训记下了, 但只修了一半。
+# 根目录没有 data/ 目录, 运行期数据在 backend/data/, 已由下一行精确覆盖。
+/data/
 backend/data/
 tts_cache/
 *.db

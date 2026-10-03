@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "ZhangXueFeng Agent"
-    APP_VERSION: str = "0.9.8"  # v0.9.8: 1 key 跑全部 + KB 集成 2 个开源 repo (124 篇内容)
+    APP_VERSION: str = "0.10.0"  # v0.10.0: 搜索修复 + KB 可插拔 + CI
     DEBUG: bool = True
 
     # Server
@@ -73,8 +73,17 @@ class Settings(BaseSettings):
     # - high   (复杂规划): Grok 4.20 Multi-Agent (xAI 最新旗舰, 多智能体协作)
     # 实测 2026-07-28: 这个 OpenRouter 账号调不通 OpenAI / Anthropic / Google / Llama 4
     #   (全 region 限), 但能调 xAI Grok 全系列 (用户 2026-07-28 改用 Grok 4.20 MA)
-    # HIGH 档触发条件 (用户规则 2026-07-28): 手动开深度思考 AND 任务分类为 high → high
+    # 高档位触发条件 (用户规则 2026-07-28): 手动开深度思考 AND 任务分类为 high → high
     #   缺一不可: 没开深度思考 → 最多 mid
+    #
+    # ⚠️ v0.10.0 标注为 **已废弃 / 不再生效**: 下面这 6 个 TIER_MODEL_*/TIER_FALLBACK_*
+    # 从 v0.9.2 起就没有任何代码读取了。实际生效链路是:
+    #     user_preferences 表 (前端"系统设置"写入)
+    #       → tier_router._read_user_pref()
+    #         → 兜底 model_whitelist.DEFAULT_TIER_MODELS
+    # 改 .env 里的这些值不会有任何效果(README v0.9.2 写的"env 仅作兜底"也不成立,
+    # env 连兜底都不是)。保留字段仅为向后兼容, 防止旧 .env 里的同名变量
+    # 造成误解。改档位模型请用前端系统设置页, 或直接改 model_whitelist.py。
     TIER_MODEL_LOW: str = "minimax/minimax-m3"
     TIER_FALLBACK_LOW: str = "minimax/minimax-m2.7,z-ai/glm-4.5-air,deepseek/deepseek-chat-v3.1"
     TIER_MODEL_MEDIUM: str = "z-ai/glm-5.2"

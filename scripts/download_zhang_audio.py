@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# ============================================================================
+# [预留 / RESERVED] 2026-10-02 起标记为预留, 未接入应用运行时。
+# 背景与后续决策方向见 scripts/RESERVED.md —— 改动前请先读那份说明。
+# 注意: 目标为真实公众人物, 涉及授权与合规, 决策前不要执行本脚本。
+# ============================================================================
 """Download Zhang Xuefeng's public speech videos and extract audio.
 
 This script helps you collect audio samples for voice cloning (see

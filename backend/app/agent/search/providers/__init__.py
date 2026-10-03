@@ -12,9 +12,13 @@ from app.agent.search.providers.duckduckgo import duckduckgo_search
 from app.agent.search.providers.baidu import baidu_search
 from app.agent.search.providers.wikipedia import wikipedia_search
 from app.agent.search.providers.arxiv import arxiv_search
+# v0.10.0: 中文源 — 实测对多 term 中文查询明显优于 Bing/Baidu
+from app.agent.search.providers.sogou import sogou_search
+from app.agent.search.providers.so360 import so360_search
 
 __all__ = [
     "search_result_template",
     "tavily_search", "bing_html_search", "duckduckgo_search", "baidu_search",
     "wikipedia_search", "arxiv_search",
+    "sogou_search", "so360_search",
 ]

@@ -16,9 +16,12 @@ sse-starlette>=2.0.0
 # chromadb 没用上, 删了
 
 # ===== 联网搜索 =====
-duckduckgo-search>=6.0
+# v0.10.0: 官方包已改名 ddgs (旧名 duckduckgo_search 停止维护)
+ddgs>=9.0.0
 beautifulsoup4>=4.12.0
 lxml>=5.0.0
 
-# ===== Tavily 搜索（可选, 需要时自己加）=====
-# tavily-python>=0.3.0
+# ===== Tavily 搜索 (选填, 1000 次/月免费) =====
+# v0.10.0: 取消注释 — 之前被注释掉, 导致 README 宣称的 "Tavily primary" 从未生效。
+# 装上后配 TAVILY_API_KEY 即可自动成为首选源 (无 key 时自动跳过)。
+tavily-python>=0.3.0
