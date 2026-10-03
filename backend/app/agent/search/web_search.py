@@ -27,7 +27,7 @@ from app.agent.search.query_builder import make_queries, rewrite_query, extract_
 from app.agent.search.url_fetcher import fetch_url
 from app.agent.search.providers import (
     tavily_search, bing_html_search, duckduckgo_search, baidu_search,
-    wikipedia_search, arxiv_search,
+    wikipedia_search, arxiv_search, sogou_search, so360_search,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def _dedup_by_url(results: list) -> list:
     return out
 
 
-def _score_result(r: dict, query: str) -> float:
+def _score_result(r: dict, query: str, _src: str = "") -> float:
     """给一条结果打分, 用于排序 (高分在前)
     - 标题含 query 关键词: +5
     - 内容含 query 关键词: +2
@@ -120,11 +120,18 @@ def _score_result(r: dict, query: str) -> float:
     url = r.get("url", "")
     # query 关键词匹配
     q_words = set(re.findall(r"[\w一-鿿]+", query))
+    matched_in_title = 0
     if q_words:
         t_words = set(re.findall(r"[\w一-鿿]+", title))
         c_words = set(re.findall(r"[\w一-鿿]+", content[:500]))
-        score += len(q_words & t_words) * 2.0
-        score += len(q_words & c_words) * 0.5
+        matched_in_title = len(q_words & t_words)
+        # v0.10.0: 关键词权重从 2.0 提到 4.0, 并对"一个词都没匹配上"重罚。
+        # 原设计让 gov.cn/edu.cn(+3)压过关键词匹配, 于是 Bing 用"广东省政府首页"
+        # 这类答非所问的权威页面就能霸榜 —— 在相关性是主要矛盾时, 权威性不该当主导。
+        score += matched_in_title * 4.0
+        score += len(q_words & c_words) * 1.0
+    if len(q_words) >= 2 and matched_in_title == 0:
+        score -= 3.0   # 多词查询却一个词都没沾, 基本可判定为无关
     # 来源权威 (适度)
     if "wikipedia.org" in url:
         score += 3
@@ -138,6 +145,9 @@ def _score_result(r: dict, query: str) -> float:
         score -= 0.5
     elif "gov.cn" in url or "edu.cn" in url:
         score += 3
+    # v0.10.0: 搜狗/360 对中文多词查询的实测相关性明显更高, 同等条件下优先采用
+    if _src in ("sogou", "so360"):
+        score += 1.5
     # 有发布时间加分
     if r.get("published"):
         score += 1
@@ -296,10 +306,18 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
     providers_to_try: List[Tuple[str, callable]] = []
     if settings.TAVILY_API_KEY:
         providers_to_try.append(("tavily", tavily_search))
+    # v0.10.0: 中文源优先。
+    # 实测同一批查询的词覆盖率:
+    #   强基计划 报考条件          → bing 0% / baidu 限流 / 搜狗 100% / 360 50%
+    #   人工智能专业 就业前景 怎么样 → bing 0% / 360 100%
+    # Bing 对多 term 中文查询会退化成只匹配第一个词(返回"汉字'强'的字典页"),
+    # 所以中文源排在前面, 但仍全部并行跑(由评分层决定谁的内容更有用)。
     providers_to_try.extend([
+        ("sogou", sogou_search),
+        ("so360", so360_search),
         ("bing", bing_html_search),
-        ("duckduckgo", duckduckgo_search),
         ("baidu", baidu_search),
+        ("duckduckgo", duckduckgo_search),
         ("wikipedia", wikipedia_search),
         ("arxiv", arxiv_search),
     ])
@@ -327,6 +345,8 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
             "elapsed": elapsed,
         })
         if prov_results:
+            for x in prov_results:
+                x["_provider"] = name   # 供 _score_result 做来源加权
             if primary_provider == "none":
                 primary_provider = name
             all_results.extend(prov_results)
@@ -367,13 +387,14 @@ async def web_search(query: str, max_results: int = 8) -> Dict:
                 if prov_results:
                     for x in prov_results:
                         x["_source_query"] = sub_q
+                        x["_provider"] = name
                     all_results.extend(prov_results)
                     got += len(prov_results)
             logger.info(f"sub_search '{sub_q[:40]}' -> {got} 条")
 
     # === 去重 + 评分排序 ===
     deduped = _dedup_by_url(all_results)
-    deduped.sort(key=lambda r: _score_result(r, query), reverse=True)
+    deduped.sort(key=lambda r: _score_result(r, query, r.get("_provider", "")), reverse=True)
     top_results = deduped[:max_results * 2]  # 留出抓全文失败的 buffer
 
     if not top_results:

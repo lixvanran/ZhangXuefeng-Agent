@@ -335,10 +335,28 @@ def _install():
     search.url_fetcher = uf
 
     prov = types.ModuleType("app.agent.search.providers")
+
+    def _load_provider(modname, rel, fname):
+        import os as _os, importlib.util as _iu
+        base = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "backend", rel)
+        sp = _iu.spec_from_file_location(modname, base)
+        m = _iu.module_from_spec(sp); sys.modules[modname] = m
+        sp.loader.exec_module(m)
+        return getattr(m, fname)
+
     prov.tavily_search = lambda *a, **k: _unavailable("tavily")
     prov.bing_html_search = bing_html_search
     prov.duckduckgo_search = lambda *a, **k: _unavailable("duckduckgo")
     prov.baidu_search = baidu_search
+    # 中文源: 复用真实现(它们只用标准库, 无需 httpx/bs4)
+    def _load_provider(modname, rel, fname):
+        import os as _os
+        base = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "backend", rel)
+        import importlib.util as _iu
+        sp = _iu.spec_from_file_location(modname, base)
+        m = _iu.module_from_spec(sp); sys.modules[modname] = m
+        sp.loader.exec_module(m)
+        return getattr(m, fname)
     prov.wikipedia_search = lambda *a, **k: _unavailable("wikipedia")
     prov.arxiv_search = lambda *a, **k: _unavailable("arxiv")
     search.providers = prov
@@ -349,6 +367,19 @@ def _install():
                    ("app.agent.search.url_fetcher", uf),
                    ("app.agent.search.providers", prov)]:
         sys.modules[m] = mod
+
+    # providers 桩补成包, 并提供真实的 base 子模块,
+    # 这样 sogou/so360 的 `from ...providers.base import ...` 才能解析
+    prov.__path__ = []
+    base_mod = _load("_rt_base", "app/agent/search/providers/base.py")
+    sys.modules["app.agent.search.providers.base"] = base_mod
+    prov.base = base_mod
+    prov.search_result_template = base_mod.search_result_template
+    prov.filter_chinese_results = base_mod.filter_chinese_results
+
+    # 桩注册完毕后再加载真实中文源(它们的 import 依赖 app.* 已在 sys.modules)
+    prov.sogou_search = _load_provider("_p_sogou", "app/agent/search/providers/sogou.py", "sogou_search")
+    prov.so360_search = _load_provider("_p_so360", "app/agent/search/providers/so360.py", "so360_search")
 
     ws = _load("_rt_ws", "app/agent/search/web_search.py")
     sys.modules["app.agent.search"].web_search = ws
@@ -402,6 +433,10 @@ async def main():
             print(f"   子搜索: {res['sub_searches']}")
         if res.get("budget_exhausted"):
             print("   ⚠️ 触发时间预算提前收尾")
+        rel = res.get("relevance")
+        if rel is not None:
+            gate = "🚫 低可信(已拦)" if res.get("low_relevance") else "✅ 通过"
+            print(f"   相关性: {rel:.0%} {gate}")
 
         if not res.get("success"):
             all_ok = False

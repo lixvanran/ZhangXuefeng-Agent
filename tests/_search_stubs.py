@@ -31,7 +31,8 @@ _state = {
 }
 
 PROVIDER_NAMES = ("tavily_search", "bing_html_search", "duckduckgo_search",
-                  "baidu_search", "wikipedia_search", "arxiv_search")
+                  "baidu_search", "wikipedia_search", "arxiv_search",
+                  "sogou_search", "so360_search")
 
 
 def set_behavior(delay=0.0, success=()):
